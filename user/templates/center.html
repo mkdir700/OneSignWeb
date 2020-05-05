@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+<title>{% block title %}用户中心{% endblock %}</title>
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-6 col-md-8 col-md-offset-2 col-xs-12">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <h1 class="text-center text-primary">{% if is_sign_today %}今日已打卡{% else %}今日暂未打卡
+                        {% endif %}</h1>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading">使用须知</div>
+                    <div class="panel-body">
+                        <p>
+                            <strong>平台介绍：</strong>
+                        </p>
+                        <p>
+                            &nbsp;&nbsp;&nbsp;&nbsp;一个简易的易统计自动打卡平台
+                        </p>
+                        <p>
+                            <b>如何打卡：</b>
+                        </p>
+                        <p>
+                            <b>&nbsp; &nbsp;</b> 您在本平台登录后，后台会记录您的cookie信息(有效期是10天)，到每天0点1分，自动帮您打卡
+                        </p>
+                        <p>
+                            <b>注意事项：</b>
+                        </p>
+                        <p>
+                            &nbsp; &nbsp; 每隔10天，您必须登录一次本平台，<span></span><span
+                                style="font-weight:bold;font-family:文泉驿等宽微米黑;">这是易统计的设定，一个</span><span
+                                style="font-weight:bold;">cookie</span><span
+                                style="font-weight:bold;font-family:文泉驿等宽微米黑;">有效期是</span><span
+                                style="font-weight:bold;">10</span><span style="font-weight:bold;font-family:文泉驿等宽微米黑;">天，</span><span
+                                style="font-weight:bold;">10</span><span style="font-weight:bold;font-family:文泉驿等宽微米黑;">天之后没有更新</span><span
+                                style="font-weight:bold;">cookie</span><span
+                                style="font-weight:bold;font-family:文泉驿等宽微米黑;">的话，将打卡失败</span>
+                        </p>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading">基本信息</div>
+                    <div class="panel-body">
+{#                        <p>姓名：</p>#}
+                        <p>电话号码：{{ user.tel }}</p>
+                        <p>上次登录时间：{{ user.last_login|date:'Y-m-d H:i:s' }}</p>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <!-- Default panel contents -->
+                    <div class="panel-heading">打卡记录</div>
+                    <!-- Table -->
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>打卡时间</th>
+                            <th>打卡状态</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for record in records %}
+                            <tr>
+                                <th scope="row">{{ record.sign_time }}</th>
+                                <td>{{ record.sign_active }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading">个人设置</div>
+                    <div class="body">
+                        <h2 class="text-center text-primary">正在开发中</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
