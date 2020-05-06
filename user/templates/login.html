@@ -1,124 +1,145 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>小One统计健康码打卡</title>
-    <meta content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0" name="viewport">
-    <meta content="yes" name="apple-mobile-web-app-capable">
-    <meta content="black" name="apple-mobile-web-app-status-bar-style">
-    <meta content="telephone=no" name="format-detection">
-    <link href="{% static 'css/style.css' %}" rel="stylesheet" type="text/css">
-</head>
-<body style="">
-<section class="aui-flexView">
-    <header class="aui-navBar aui-navBar-fixed">
-        <a href="javascript:;" class="aui-navBar-item">
-            <i class="icon icon-return"></i>
-        </a>
-        <div class="aui-center">
-            <span class="aui-center-title"></span>
-        </div>
-    </header>
-    <section class="aui-scrollView">
-        <div class="aui-ver-head">
-            <img src="{% static 'img/head.png' %}" alt="">
-        </div>
-        <div class="aui-ver-form">
-            <h2>手动打卡&更新cookie</h2>
-            <div class="aui-flex">
-                <div class="aui-flex-box">
-                    <i class="icon icon-phone"></i>
-                    <input id="phone1" type="text" autocomplete="off" placeholder="手机号码">
+<title>{% block title %}小One统计健康码打卡{% endblock %}</title>
+{% block header %}
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">{% endblock %}
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">登录&手动打卡</div>
+                    <div class="panel-body">
+                        <label for="phone1">手机号：</label>
+                        <input id="phone1" type="text" class="form-control" placeholder="手机号码"
+                               aria-describedby="basic-addon1">
+                        <label for="code1">验证码：</label>
+                        <div class="input-group">
+                            <input id="code1" type="text" class="form-control" placeholder="验证码">
+                            <span class="input-group-btn">
+                        <button id="btnSendCode1" class="btn btn-default" type="button"
+                                onclick="sendMessage1()">获取验证码</button>
+                        </span>
+                        </div>
+                        <div class="login">
+                            <button id="btn-login" class="btn btn-primary form-control" onclick="binding()">立即登录
+                            </button>
+                        </div>
+                        {% if user.is_authenticated %}
+                            <div class="panel-footer">
+                                <p>检测到当前您处于登录状态，您可直接进入用户中心 <a href="{% url 'center' %}">进入</a></p>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-            <div class="aui-flex">
-                <div class="aui-flex-box">
-                    <i class="icon icon-code"></i>
-                    <input id="code1" type="text" autocomplete="off" placeholder="验证码">
-                </div>
-                <div class="aui-button-code">
-                    <input id="btnSendCode1" type="button" class="btn btn-default" value="获取验证码"
-                           onclick="sendMessage1()">
-                </div>
-            </div>
-            <div class="aui-ver-button">
-                <button onclick="binding()">立即登录</button>
-            </div>
         </div>
-    </section>
-</section>
+    </div>
+{% endblock %}
+{% block foot_script %}
+    {#<button type="" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#tip-modal">#}
+    {#    调试#}
+    {#</button>#}
+    <div id="tip-modal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">提示</h4>
+                </div>
+                <div id="tip" class="modal-body">
+                    <p>验证码请求失败，请重写请求</p>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+    <script type="text/javascript">
+        var phoneReg = /(^1[3|4|5|7|8]\d{9}$)|(^09\d{8}$)/;
+        var count = 60;
+        var InterValObj1;
+        var curCount1;
 
-<script src="{% static 'js/jquery.min.js' %}"></script>
-<script type="text/javascript">
-    var phoneReg = /(^1[3|4|5|7|8]\d{9}$)|(^09\d{8}$)/;
-    var count = 60;
-    var InterValObj1;
-    var curCount1;
-
-    function sendMessage1() {
-        curCount1 = count;
-        var phone = $.trim($('#phone1').val());
-        if (!phoneReg.test(phone)) {
-            alert(" 请输入有效的手机号码");
-            return false;
-        }
-        $.ajax({
-            url: "{% url 'get_code' %}",
-            type: 'GET',
-            data: {
-                'tel': phone
-            },
-            cache: false,
-            success: function (data) {
-
-            },
-            error: function (xhr) {
-
+        function sendMessage1() {
+            curCount1 = count;
+            var phone = $.trim($('#phone1').val());
+            if (!phoneReg.test(phone)) {
+                alert(" 请输入有效的手机号码");
+                return false;
             }
+            $.ajax({
+                url: "{% url 'get_code' %}",
+                type: 'GET',
+                data: {
+                    'tel': phone
+                },
+                cache: false,
+                success: function (data) {
+                    if (data['status'] === 'SUCCESS') {
+                        $('#tip').text(data['msg']);
+                        $('#tip-modal').modal('show')
+                    } else {
+                        $('#tip').text(data['msg']);
+                        $('#tip-modal').modal('show');
+                    }
+                },
+                error: function (xhr) {
+                    $('#tip-modal').modal('show');
+                }
 
-        });
-        $("#btnSendCode1").attr("disabled", "true");
-        $("#btnSendCode1").val(+curCount1 + "秒再获取");
-        InterValObj1 = window.setInterval(SetRemainTime1, 1000);
-    }
-
-    function SetRemainTime1() {
-        if (curCount1 == 0) {
-            window.clearInterval(InterValObj1);
-            $("#btnSendCode1").removeAttr("disabled");
-            $("#btnSendCode1").val("重新发送");
-        } else {
-            curCount1--;
-            $("#btnSendCode1").val(+curCount1 + "秒再获取");
+            });
+            $("#btnSendCode1").text(+curCount1 + "秒再获取");
+            $("#btnSendCode1").attr("disabled", "true");
+            InterValObj1 = window.setInterval(SetRemainTime1, 1000);
         }
-    }
 
-    function binding() {
-        var phone = document.getElementById("phone1").value;
-        var code = document.getElementById("code1").value;
-        if (!phone || !code) {
-            alert("信息填写不完整");
-            return;
-        }
-        $.ajax({
-            url: {% url 'login' %},
-            type: 'POST',
-            data: {
-                'username': phone,
-                'password': code
-            },
-            cache: false,
-            success: function (data) {
-                window.location.href = '/center';
-                {#console.log(data);#}
-            },
-            error: function (xhr) {
-                alert("登录失败")
+        function SetRemainTime1() {
+            if (curCount1 == 0) {
+                window.clearInterval(InterValObj1);
+                $("#btnSendCode1").removeAttr("disabled");
+                $("#btnSendCode1").text("重新发送");
+            } else {
+                curCount1--;
+                $("#btnSendCode1").text(+curCount1 + "秒再获取");
             }
-        });
-    }
-</script>
+        }
 
-</body>
-</html>
+        function binding() {
+            var phone = document.getElementById("phone1").value;
+            var code = document.getElementById("code1").value;
+            if (!phone || !code) {
+                alert("信息填写不完整");
+                return;
+            }
+            $("#btn-login").text("正在验证，请稍等...");
+            $("#btn-login").attr("disabled", "true");
+            $.ajax({
+                url: {% url 'login' %},
+                type: 'POST',
+                data: {
+                    'username': phone,
+                    'password': code
+                },
+                cache: false,
+                success: function (data) {
+                    if (data['status'] === 'SUCCESS') {
+                        window.location.href = '/center';
+                    } else {
+                        $('#tip').text('登录失败，请稍后再试');
+                        $('#tip-modal').modal('show');
+                        $("#btn-login").removeAttr("disabled");
+                        $("#btn-login").text("立即登录");
+                    }
+
+                },
+                error: function (xhr) {
+                    $('#tip').text('登录失败，请稍后再试');
+                    $('#tip-modal').modal('show');
+                    $("#btn-login").removeAttr("disabled");
+                    $("#btn-login").text("立即登录");
+                }
+            });
+        }
+    </script>
+{% endblock %}

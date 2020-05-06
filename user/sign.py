@@ -15,7 +15,7 @@ def encrypt_tel(tel):
     return base64_tel
 
 
-def get_code(tel):
+def get_code(tel) -> bool:
     """请求获取验证码"""
     auth_url = 'https://www.ioteams.com/ncov/api/users/authcode'
     base64_tel = encrypt_tel(tel)
@@ -25,8 +25,14 @@ def get_code(tel):
     }
     response = requests.request(
         "POST", auth_url, headers=headers, data=payload)
-    print("验证码发送成功")
-    print(response.text.encode('utf8'))
+    print(response.status_code)
+    if response.status_code == 204:
+        print(response.text.encode('utf8'))
+        print("验证码发送成功")
+        return True
+    else:
+        print("验证码请求失败")
+        return False
 
 
 
@@ -147,7 +153,10 @@ class HeathSign(object):
             "__v",
             "current_fever"]
         for field in fields:
-            lastHealthReport.pop(field)
+            try:
+                lastHealthReport.pop(field)
+            except:
+                continue
         lastHealthReport["description"] = ""
         lastHealthReport["at_home"] = True
         # 数据整理

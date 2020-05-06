@@ -3,7 +3,7 @@
 {% block content %}
     <div class="container">
         <div class="row">
-            <div class="col-sm-6 col-md-8 col-md-offset-2 col-xs-12">
+            <div class="col-sm-10 col-md-8 col-md-offset-2 col-xs-12">
                 <div class="panel panel-default">
                     <div class="panel-body">
                         <h1 class="text-center text-primary">{% if is_sign_today %}今日已打卡{% else %}今日暂未打卡
@@ -43,9 +43,26 @@
                 <div class="panel panel-default">
                     <div class="panel-heading">基本信息</div>
                     <div class="panel-body">
-{#                        <p>姓名：</p>#}
                         <p>电话号码：{{ user.tel }}</p>
+                        <p>电子邮箱：{% if user.email %}
+                            {{ user.email }} <a href="{% url 'bindEmail' %}">邮箱换绑</a>
+                        {% else %}
+                            暂未绑定<a href="{% url 'bindEmail' %}">立即绑定</a>
+                        {% endif %}</p>
                         <p>上次登录时间：{{ user.last_login|date:'Y-m-d H:i:s' }}</p>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading">cookie有效时间剩余</div>
+                    <div class="panel-body">
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="{{ percent }}"
+                                 aria-valuemin="0" aria-valuemax="100" style="width: {{ percent }}">{{ percent }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-footer">
+                        失效时间: {{ expire_time }}
                     </div>
                 </div>
                 <div class="panel panel-default">

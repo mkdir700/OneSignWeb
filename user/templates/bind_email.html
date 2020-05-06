@@ -1,0 +1,110 @@
+{% extends 'form.html' %}
+{% block send_code_button %}
+    <button id="send_email_code" class="btn btn-primary" type="button" onclick="sendMessage1()">发送验证码</button>
+{% endblock %}
+{% block foot_script %}
+    <div id="tip-modal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">提示</h4>
+                </div>
+                <div id="tip" class="modal-body">
+                    验证码请求异常，请重新获取
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+    <script type="text/javascript">
+        var emailReg = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/;
+        var count = 30;
+        var InterValObj1;
+        var curCount1;
+
+        function sendMessage1() {
+            curCount1 = count;
+            var email = $.trim($('#id_email').val());
+            if (!emailReg.test(email)) {
+                alert("请输入有效的邮箱");
+                return false;
+            }
+            $.ajax({
+                url: "{% url 'sendEmailCode' %}",
+                type: 'GET',
+                data: {
+                    'email': email
+                },
+                cache: false,
+                success: function (data) {
+                    if (data['status'] === 'SUCCESS') {
+                        $('#tip').text(data['msg']);
+                        $('#tip-modal').modal('show')
+                    } else {
+                        $('#tip').text(data['msg']);
+                        $('#tip-modal').modal('show');
+                    }
+                },
+                error: function (xhr) {
+                    $('#tip-modal').modal('show');
+                }
+
+            });
+            $("#send_email_code").text(+curCount1 + "秒再获取");
+            $("#send_email_code").attr("disabled", "true");
+            InterValObj1 = window.setInterval(SetRemainTime1, 1000);
+        }
+
+        function SetRemainTime1() {
+            if (curCount1 == 0) {
+                window.clearInterval(InterValObj1);
+                $("#send_email_code").removeAttr("disabled");
+                $("#send_email_code").text("重新发送");
+            } else {
+                curCount1--;
+                $("#send_email_code").text(+curCount1 + "秒再获取");
+            }
+        }
+
+        function binding() {
+            var email = document.getElementById("email").value;
+            var code = document.getElementById("code1").value;
+            if (!email || !code) {
+                alert("信息填写不完整");
+                return;
+            }
+            $("#btn-login").text("正在验证，请稍等...");
+            $("#btn-login").attr("disabled", "true");
+            $.ajax({
+                url: {% url 'bindEmail' %},
+                type: 'POST',
+                data: {
+                    'username': email,
+                    'password': code
+                },
+                cache: false,
+                success: function (data) {
+                    if (data['status'] === 'SUCCESS') {
+                        $('#tip').text('已成功绑定邮箱');
+                        $('#tip-modal').modal('show');
+                        window.location.href = '/center';
+                    } else {
+                        $('#tip').text('绑定失败，请稍后再试');
+                        $('#tip-modal').modal('show');
+                        $("#btn-login").removeAttr("disabled");
+                        $("#btn-login").text("提交");
+                    }
+
+                },
+                error: function (xhr) {
+                    $('#tip').text('绑定失败，请稍后再试');
+                    $('#tip-modal').modal('show');
+                    $("#btn-login").removeAttr("disabled");
+                    $("#btn-login").text("提交");
+                }
+            });
+        }
+    </script>
+{% endblock %}

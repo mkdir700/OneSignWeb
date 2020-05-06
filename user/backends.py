@@ -14,7 +14,16 @@ class CustomModelBackends(ModelBackend):
         try:
             user = UserModel._default_manager.get_by_natural_key(username)
         except UserModel.DoesNotExist:
-            user = UserModel.objects.create_user(username=username, tel=username)
+            # 不存在此用户，先验证账号密码是否正确，正确才新增
+            res = UserModel.check_verify_code(self, username, password)
+            if res['status']:
+                user = UserModel.objects.create_user(username=username, tel=username)
+                user.cookie = res['cookies']
+                user.save()
+                return user
+            else:
+                return
+
         if user.is_staff:
             if user.check_password(password) and self.user_can_authenticate(user):
                 return user
