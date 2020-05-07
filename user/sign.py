@@ -6,6 +6,7 @@ import base64
 
 COOKIES_PATH = ''
 
+
 def encrypt_tel(tel):
     """加密手机号码"""
     encode_tel = base64.b64encode(tel.encode('utf-8'))
@@ -35,7 +36,6 @@ def get_code(tel) -> bool:
         return False
 
 
-
 class HeathSign(object):
 
     def __init__(self):
@@ -57,7 +57,8 @@ class HeathSign(object):
         }
         payload = "tel={}&mode=1&authcode={}&type=h5".format(
             base64_tel, authcode)
-        response = self.session.request("POST", login_api, headers=headers, data=payload)
+        response = self.session.request(
+            "POST", login_api, headers=headers, data=payload)
         if response.status_code != 200:
             print("登录失败")
             return False
@@ -138,7 +139,18 @@ class HeathSign(object):
         self.user_id = data["data"]["data"]["_id"]
         self.latestReport = data["data"]["data"]["latestReport"]
         address = data["data"]["data"]["address"]
-        lastHealthReport = data["data"]["data"]["lastHealthReport"]
+        # todo 部分用户取不到lastHealthReport
+        try:
+            lastHealthReport = data["data"]["data"]["lastHealthReport"]
+        except:
+            lastHealthReport = {
+                'self_confirmed': False,
+                'self_suspected': False,
+                'family_suspected': False,
+                'family_confirmed': False,
+                'infected': False,
+                'contacted': False,
+                'fever': False}
         address.pop("detail")
         address.pop("_id")
         fields = [
@@ -155,7 +167,7 @@ class HeathSign(object):
         for field in fields:
             try:
                 lastHealthReport.pop(field)
-            except:
+            except BaseException:
                 continue
         lastHealthReport["description"] = ""
         lastHealthReport["at_home"] = True

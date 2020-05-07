@@ -27,7 +27,7 @@ scheduler.add_jobstore(DjangoJobStore(), 'default')
 
 
 # 每天8点半执行这个任务
-@register_job(scheduler, 'cron', id='autosign', hour=0, minute=2, args=['test'])
+@register_job(scheduler, 'cron', id='autosign', hour=0, minute=1, args=['test'])
 def test(test):
     # 具体要执行的代码
     print("执行打卡")

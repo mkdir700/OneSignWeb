@@ -18,15 +18,3 @@ def start_run():
         except:
             SignRecord(user=user, sign_active=False).save()
         time.sleep(1)
-
-
-# def start_s_run(kwargs):
-#     user = kwargs['user']
-#     try:
-#         print(111111111111111)
-#         res = local_run(user.cookie)
-#         # 记录签到日志
-#         if res['status']:
-#             SignRecord(user=user).save()
-#     except:
-#         SignRecord(user=user, sign_active=False).save()
