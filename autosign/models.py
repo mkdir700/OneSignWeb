@@ -15,3 +15,5 @@ class SignTasks(models.Model):
 
     class Meta():
         ordering = ['-id']
+        verbose_name = "任务表"
+        verbose_name_plural = verbose_name

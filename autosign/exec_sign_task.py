@@ -11,10 +11,12 @@ def start_run():
     for task in tasks:
         user = User.objects.get(id=task.user_id)
         try:
-            res = local_run(user.cookie)
+            res = local_run(user.cookie, user.wxPushKey)
             # 记录签到日志
             if res['status']:
                 SignRecord(user=user).save()
+            else:
+                SignRecord(user=user, sign_active=False).save()
         except:
             SignRecord(user=user, sign_active=False).save()
         time.sleep(1)

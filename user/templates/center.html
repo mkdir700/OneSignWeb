@@ -4,13 +4,22 @@
     <div class="container">
         <div class="row">
             <div class="col-sm-10 col-md-8 col-md-offset-2 col-xs-12">
-                <div class="panel panel-default">
+                <div class="panel panel-default sign-status">
                     <div class="panel-body">
                         <h1 class="text-center text-primary">{% if is_sign_today %}今日已打卡{% else %}今日暂未打卡
                         {% endif %}</h1>
                     </div>
                 </div>
-                <div class="panel panel-default">
+                <div class="panel panel-default control">
+                    <div class="panel-heading">
+                        快捷操作
+                    </div>
+                    <div class="panel-body">
+                        <button id="cookieSign" class="btn btn-primary" onclick="cookieSign()">手动签到</button>
+                        <button id="updateCookie" class="btn btn-primary" onclick="updateCookie()">更新cookie</button>
+                    </div>
+                </div>
+                <div class="panel panel-default notice">
                     <div class="panel-heading">使用须知</div>
                     <div class="panel-body">
                         <p>
@@ -40,7 +49,7 @@
                         </p>
                     </div>
                 </div>
-                <div class="panel panel-default">
+                <div class="panel panel-default user-info">
                     <div class="panel-heading">基本信息</div>
                     <div class="panel-body">
                         <p>电话号码：{{ user.tel }}</p>
@@ -52,11 +61,11 @@
                         <p>上次登录时间：{{ user.last_login|date:'Y-m-d H:i:s' }}</p>
                     </div>
                 </div>
-                <div class="panel panel-default">
+                <div class="panel panel-default cookie-status">
                     <div class="panel-heading">cookie有效时间剩余</div>
                     <div class="panel-body">
                         <div class="progress">
-                            <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="{{ percent }}"
+                            <div id="progress-bar" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="{{ percent }}"
                                  aria-valuemin="0" aria-valuemax="100" style="width: {{ percent }}">{{ percent }}
                             </div>
                         </div>
@@ -65,7 +74,7 @@
                         失效时间: {{ expire_time }}
                     </div>
                 </div>
-                <div class="panel panel-default">
+                <div class="panel panel-default sign-record">
                     <!-- Default panel contents -->
                     <div class="panel-heading">打卡记录</div>
                     <!-- Table -->
@@ -86,13 +95,71 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="panel panel-default">
-                    <div class="panel-heading">个人设置</div>
-                    <div class="body">
-                        <h2 class="text-center text-primary">正在开发中</h2>
-                    </div>
-                </div>
+                {#                <div class="panel panel-default setting">#}
+                {#                    <div class="panel-heading">个人设置</div>#}
+                {#                    <div class="body">#}
+                {#                        <h2 class="text-center text-primary">正在开发中</h2>#}
+                {#                    </div>#}
+                {#                </div>#}
             </div>
         </div>
     </div>
+{% endblock %}
+{% block foot_script %}
+    <div id="tip-modal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">提示</h4>
+                </div>
+                <div id="tip" class="modal-body">
+                    <p></p>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+    <script type="text/javascript">
+        function updateCookie() {
+            window.location.href = {% url 'login' %};
+        }
+        function cookieSign() {
+            $("#cookieSign").text("正在签到...");
+            $("#cookieSign").attr("disabled", "true");
+            $.ajax({
+                url: {% url 'cookieSign' %},
+                type: 'GET',
+                cache: false,
+                success: function (data) {
+                    $('#tip').text(data['msg']);
+                    $('#tip-modal').modal('show');
+                    $("#cookieSign").removeAttr("disabled");
+                    $("#cookieSign").text("手动签到");
+                },
+                error: function (xhr) {
+                    $('#tip').text('签到失败,服务器错误');
+                    $('#tip-modal').modal('show');
+                    $("#cookieSign").removeAttr("disabled");
+                    $("#cookieSign").text("手动签到");
+                }
+            });
+        }
+        $(function changeProgressbar() {
+            var percent = '{{ percent }}';
+            var str = percent.replace("%","");
+            var defaultColor = 'progress-bar-success';
+            var div = document.getElementById('progress-bar');
+            str= str/100;
+            if (str >= 0 && str < 0.25){
+                div.classList.replace(defaultColor,'progress-bar-danger');
+            } else if (str >=0.25 && str < 0.5 ){
+                div.classList.replace(defaultColor,'progress-bar-warning');
+            } else if (str >=0.5 && str < 0.75) {
+                div.classList.replace(defaultColor,'progress-bar-info');
+            }
+        });
+
+    </script>
 {% endblock %}

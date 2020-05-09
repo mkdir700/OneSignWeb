@@ -13,7 +13,7 @@ from django.core.mail import send_mail
 from apscheduler.schedulers.background import BackgroundScheduler
 from django_apscheduler.jobstores import DjangoJobStore, register_events, register_job
 
-from .sign import cloud_run
+from .sign import cloud_run, local_run
 from .sign import get_code as authcode
 from .models import SignRecord
 from .forms import BindEmailForm
@@ -27,7 +27,8 @@ scheduler.add_jobstore(DjangoJobStore(), 'default')
 
 
 # 每天8点半执行这个任务
-@register_job(scheduler, 'cron', id='autosign', hour=0, minute=1, args=['test'])
+# @register_job(scheduler, 'cron', id='autosign', hour=0, minute=2, args=['test'])
+@register_job(scheduler, 'interval', id='autosign', seconds=10, args=['test'])
 def test(test):
     # 具体要执行的代码
     print("执行打卡")
@@ -91,7 +92,7 @@ def center(request):
                                              microseconds=now.microsecond)
         # 获取23:59:59
         lastToday = zeroToday + datetime.timedelta(hours=23, minutes=59, seconds=59)
-        context['records'] = SignRecord.objects.filter(user=user)
+        context['records'] = SignRecord.objects.filter(user=user)[:5]
         context['is_sign_today'] = SignRecord.objects.filter(sign_time__range=(zeroToday, lastToday)).exists()
         return render(request, 'center.html', context)
     else:
@@ -168,4 +169,21 @@ def get_code(request):
     else:
         data['status'] = 'ERROR'
         data['msg'] = '验证码请求失败，请重新获取'
+    return JsonResponse(data)
+
+
+def sign_by_cookie(request):
+    user = request.user
+    data = {}
+    if not user.is_authenticated:
+        data['status'] = 'ERROR'
+        data['msg'] = '用户未登录'
+        return JsonResponse(data)
+    resp = local_run(user.cookie)
+    if resp['status']:
+        data['status'] = 'SUCCESS'
+        data['msg'] = '手动打卡成功'
+    else:
+        data['status'] = 'ERROR'
+        data['msg'] = resp['msg']
     return JsonResponse(data)

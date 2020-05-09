@@ -8,4 +8,5 @@ urlpatterns = [
     path('center/', views.center, name='center'),
     path('get_code/', views.get_code, name='get_code'),
     path('sendEmailCode/', views.send_code_by_email, name='sendEmailCode'),
+    path('cookieSign/', views.sign_by_cookie, name='cookieSign'),
 ]

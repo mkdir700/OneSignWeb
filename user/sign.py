@@ -2,7 +2,6 @@ import os
 import json
 import requests
 import base64
-# from config import *
 
 COOKIES_PATH = ''
 
@@ -86,7 +85,6 @@ class HeathSign(object):
             'https://www.ioteams.com/ncov/api/sys/user/info',
             headers=self.headers)
         if r.status_code == 200:
-            # 失效cookies
             return True
         else:
             return False
@@ -120,15 +118,6 @@ class HeathSign(object):
             return True
         else:
             return False
-
-    def __server_send(self, dict):
-        """server酱将消息推送至微信"""
-        params = {
-            'text': '健康码每日自动打卡消息！',
-            'desp': dict['detail']
-        }
-
-        requests.get('', params=params)
 
     def __get_user_info(self):
         """获取个人信息"""
@@ -205,6 +194,15 @@ class HeathSign(object):
             print("打卡失败")
             return {'msg': False, 'detail': '健康码打卡失败'}
 
+    def __server_send(self, dict):
+        """server酱将消息推送至微信"""
+        params = {
+            'text': '健康码每日自动打卡消息！',
+            'desp': dict['detail']
+        }
+
+        requests.get('', params=params)
+
     def run(self) -> dict:
         cookies = self.__save_cookies()
         self.__get_user_info()
@@ -222,12 +220,26 @@ class HeathSign(object):
         return msg
 
 
-def local_run(cookie):
+def wxPusher(data, key):
+    params = {}
+    api = 'http://wxmsg.dingliqc.com/send'
+    params['title'] = '自动打卡消息推送'
+    params['msg'] = data['detail']
+    params['userIds'] = key
+    resp = requests.get(api, params=params)
+    print(resp)
+    print('消息推送成功')
+
+
+def local_run(cookie, key) -> dict:
     """本地挂机运行"""
     s = HeathSign()
     if not s.cookie_login(cookie):
         return {'status': False, 'msg': "cookie可能失效"}
-    return s.run()
+    data = s.run()
+    if key:
+        wxPusher(data, key)
+    return data
 
 
 def cloud_run(tel, code) -> dict:

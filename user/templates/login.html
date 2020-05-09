@@ -8,7 +8,7 @@
         <div class="row">
             <div class="col-xs-12">
                 <div class="panel panel-primary">
-                    <div class="panel-heading">登录&手动打卡</div>
+                    <div class="panel-heading">登录 & 更新cookie</div>
                     <div class="panel-body">
                         <label for="phone1">手机号：</label>
                         <input id="phone1" type="text" class="form-control" placeholder="手机号码"
@@ -27,7 +27,8 @@
                         </div>
                         {% if user.is_authenticated %}
                             <div class="panel-footer">
-                                <p>检测到当前您处于登录状态，您可直接进入用户中心 <a href="{% url 'center' %}">进入</a></p>
+                                <p>1.检测到当前您处于登录状态，您可直接进入用户中心 <a href="{% url 'center' %}">进入</a></p>
+                                <p>2.如需更新cookie，请在此页面再次登录</p>
                             </div>
                         {% endif %}
                     </div>
