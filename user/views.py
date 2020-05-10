@@ -20,6 +20,7 @@ from .forms import BindEmailForm
 from autosign.models import SignTasks
 from autosign.exec_sign_task import start_run
 
+
 # 实例化调度器
 scheduler = BackgroundScheduler()
 # 调度器使用默认的DjangoJobStore()
@@ -27,8 +28,8 @@ scheduler.add_jobstore(DjangoJobStore(), 'default')
 
 
 # 每天8点半执行这个任务
-# @register_job(scheduler, 'cron', id='autosign', hour=0, minute=2, args=['test'])
-@register_job(scheduler, 'interval', id='autosign', seconds=10, args=['test'])
+# @register_job(scheduler, 'interval', id='autosign', seconds=10, args=['test'])
+@register_job(scheduler, 'cron', id='autosign', hour=0, minute=2, args=['test'])
 def test(test):
     # 具体要执行的代码
     print("执行打卡")

@@ -3,6 +3,7 @@ import json
 import requests
 import base64
 
+
 COOKIES_PATH = ''
 
 
@@ -231,14 +232,12 @@ def wxPusher(data, key):
     print('消息推送成功')
 
 
-def local_run(cookie, key) -> dict:
+def local_run(cookie) -> dict:
     """本地挂机运行"""
     s = HeathSign()
     if not s.cookie_login(cookie):
-        return {'status': False, 'msg': "cookie可能失效"}
+        return {'status': False, 'msg': "cookie已失效"}
     data = s.run()
-    if key:
-        wxPusher(data, key)
     return data
 
 

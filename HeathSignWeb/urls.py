@@ -24,6 +24,7 @@ urlpatterns = [
     path('', login),
     path('admin/', admin.site.urls),
     path('', include('user.urls')),
+    path('wxpush/', include('wxpush.urls')),
 ]
 
 urlpatterns += staticfiles_urlpatterns()

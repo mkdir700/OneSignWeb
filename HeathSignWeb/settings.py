@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django_apscheduler',
     'user',
     'autosign',
+    'wxpush',
 ]
 
 MIDDLEWARE = [
