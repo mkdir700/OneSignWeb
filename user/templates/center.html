@@ -61,7 +61,7 @@
                     <div class="panel-body">
                         <p>电话号码：{{ user.tel }}</p>
                         <p>消息推送：{% if user.wxPushKey %}
-                            已绑定 <a onclick="getQrcode()">再次绑定</a>
+                            已绑定 <a onclick="getQrcode()">重新绑定</a>
                         {% else %}
                             暂未绑定 <a onclick="getQrcode()">立即绑定</a>
                         {% endif %}</p>

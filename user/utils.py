@@ -1,2 +1,0 @@
-from wxpusher import WxPusher
-
