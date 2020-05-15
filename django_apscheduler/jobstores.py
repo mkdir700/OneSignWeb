@@ -18,13 +18,20 @@ from django_apscheduler.util import deserialize_dt, serialize_dt
 
 LOGGER = logging.getLogger("django_apscheduler")
 
-def ignore_database_error(on_error_value=None):
 
+def close_old_connections():
+    """关闭失效连接"""
+    for conn in connections.all():
+        conn.close_if_unusable_or_obsolete()
+
+
+def ignore_database_error(on_error_value=None):
     def dec(func):
         from functools import wraps
 
         @wraps(func)
         def inner(*a, **k):
+            close_old_connections()
             try:
                 return func(*a, **k)
             except (OperationalError, ProgrammingError) as e:
@@ -35,7 +42,9 @@ def ignore_database_error(on_error_value=None):
                     stacklevel=3
                 )
                 return on_error_value
+
         return inner
+
     return dec
 
 
@@ -57,6 +66,10 @@ class DjangoJobStore(BaseJobStore):
             job_state = DjangoJob.objects.get(name=job_id).job_state
         except DjangoJob.DoesNotExist:
             return None
+        # except OperationalError:
+        for conn in connections.all():
+            conn.close_if_unusable_or_obsolete()
+
         r = self._reconstitute_job(job_state) if job_state else None
         LOGGER.debug("Got %s", r)
         return r
@@ -75,7 +88,8 @@ class DjangoJobStore(BaseJobStore):
     @ignore_database_error()
     def get_next_run_time(self):
         try:
-            return deserialize_dt(DjangoJob.objects.filter(next_run_time__isnull=False).earliest('next_run_time').next_run_time)
+            return deserialize_dt(
+                DjangoJob.objects.filter(next_run_time__isnull=False).earliest('next_run_time').next_run_time)
         except ObjectDoesNotExist:  # no active jobs
             return
         except:
@@ -100,7 +114,7 @@ class DjangoJobStore(BaseJobStore):
         if not created:
             LOGGER.warning("Job with id %s already in jobstore. I'll refresh it", job.id)
             dbJob.next_run_time = serialize_dt(job.next_run_time)
-            dbJob.job_state=pickle.dumps(job.__getstate__(), self.pickle_protocol)
+            dbJob.job_state = pickle.dumps(job.__getstate__(), self.pickle_protocol)
             dbJob.save()
 
     @ignore_database_error()
@@ -176,7 +190,6 @@ def event_name(code):
 
 
 class _EventManager(object):
-
     LOGGER = LOGGER.getChild("events")
 
     def __init__(self, storage=None):
@@ -184,7 +197,7 @@ class _EventManager(object):
 
     def __call__(self, event):
         LOGGER.debug("Got event: %s, %s, %s",
-                      event, type(event), event.__dict__)
+                     event, type(event), event.__dict__)
         # print event, type(event), event.__dict__
         try:
             if isinstance(event, JobSubmissionEvent):
@@ -240,6 +253,7 @@ def register_job(scheduler, *a, **k):
 
     :param a, k: Params, will be passed to scheduler.add_job method. See :func:`BaseScheduler.add_job`
     """
+
     # type: (BaseScheduler)->callable
 
     def inner(func):

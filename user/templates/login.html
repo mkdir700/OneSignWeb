@@ -70,7 +70,7 @@
                 return false;
             }
             $.ajax({
-                url: "{% url 'get_code' %}",
+                url: "{% url 'sendTelCode' %}",
                 type: 'GET',
                 data: {
                     'tel': phone

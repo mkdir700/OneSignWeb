@@ -56,6 +56,8 @@ class DjangoJob(models.Model):
         return '%s (%s)' % (self.name, status)
 
     class Meta:
+        verbose_name = "计划任务"
+        verbose_name_plural = verbose_name
         ordering = ('next_run_time', )
 
 
@@ -126,3 +128,5 @@ class DjangoJobExecution(models.Model):
 
     class Meta:
         ordering = ('-run_time', )
+        verbose_name = "执行记录"
+        verbose_name_plural = verbose_name

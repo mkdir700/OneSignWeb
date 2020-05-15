@@ -1,5 +1,4 @@
-import time
-from user.sign import local_run
+from autosign.sign import local_run
 from .models import SignTasks, User
 from user.models import SignRecord
 from wxpush.utils import send_message

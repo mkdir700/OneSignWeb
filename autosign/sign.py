@@ -221,17 +221,6 @@ class HeathSign(object):
         return msg
 
 
-def wxPusher(data, key):
-    params = {}
-    api = 'http://wxmsg.dingliqc.com/send'
-    params['title'] = '自动打卡消息推送'
-    params['msg'] = data['detail']
-    params['userIds'] = key
-    resp = requests.get(api, params=params)
-    print(resp)
-    print('消息推送成功')
-
-
 def local_run(cookie) -> dict:
     """本地挂机运行"""
     s = HeathSign()

@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from .sign import cloud_run
+from autosign.sign import cloud_run
 
 
 class User(AbstractUser):
@@ -17,7 +17,8 @@ class User(AbstractUser):
     class Meta(AbstractUser.Meta):
         pass
 
-    def check_verify_code(self, username, password):
+    @staticmethod
+    def check_verify_code(username, password):
         return cloud_run(username, password)
 
 
