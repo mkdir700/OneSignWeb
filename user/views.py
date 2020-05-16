@@ -12,27 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from autosign.sign import get_code as authcode
 from .models import SignRecord
-from .forms import BindEmailForm
 from autosign.models import SignTasks
-from autosign.exec_sign_task import start_run
-
-# # 实例化调度器
-# scheduler = BackgroundScheduler()
-# # 调度器使用默认的DjangoJobStore()
-# scheduler.add_jobstore(DjangoJobStore(), 'default')
-
-# # 每天8点半执行这个任务
-# # @register_job(scheduler, 'interval', id='autosign', seconds=10, args=['test'])
-# @register_job(scheduler, 'cron', id='autosign', hour=0, minute=2, args=['test'])
-# def test(test):
-#     # 具体要执行的代码
-#     print("执行打卡")
-#     start_run()
-
-
-# 注册定时任务并开始
-# register_events(scheduler)
-# scheduler.start()
 
 User = get_user_model()
 
@@ -55,6 +35,8 @@ def login(request):
             # 将用户添加到任务表中
             if not SignTasks.objects.filter(user=user).exists():
                 SignTasks(user=user).save()
+            # 更新易统计cookie失效时间
+            user.update_cookie_expire_time()
             data['status'] = 'SUCCESS'
         else:
             data['status'] = 'ERROR'
