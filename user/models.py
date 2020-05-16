@@ -1,11 +1,8 @@
 import datetime
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.contrib.auth import get_user_model
+from django.utils import timezone
 from autosign.sign import cloud_run
-
-
-# UserModel = get_user_model()
 
 
 class User(AbstractUser):
@@ -14,7 +11,9 @@ class User(AbstractUser):
     # cookie
     cookie = models.TextField(default='')
     # 默认为null,第一次登录的时候才去设置
-    cookie_expired_time = models.DateTimeField(null=True, verbose_name='cookie失效时间')
+    # date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
+    cookie_expired_time = models.DateTimeField(verbose_name='cookie失效时间', default=datetime.datetime.fromtimestamp(
+        timezone.now().timestamp() + 864000))
     # wxPushKey
     wxPushKey = models.CharField(max_length=50, default='', verbose_name='消息Key')
 
@@ -30,11 +29,8 @@ class User(AbstractUser):
 
     def update_cookie_expire_time(self):
         """更新cookie的失效时间"""
-        expire_time_stamp = self.last_login.timestamp() + 864000
-        cookie_expired_time = datetime.datetime.fromtimestamp(expire_time_stamp)
-        self.cookie_expired_time = cookie_expired_time
+        self.cookie_expired_time = datetime.datetime.fromtimestamp(self.last_login.timestamp() + 864000)
         self.save()
-        return cookie_expired_time
 
 
 class SignRecord(models.Model):

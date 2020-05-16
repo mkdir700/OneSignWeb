@@ -1,11 +1,8 @@
 import time
-import string
-import random
 import datetime
 from django.contrib import auth
 from django.urls import reverse
 from django.http import JsonResponse
-from django.core.mail import send_mail
 from django.shortcuts import render, redirect
 from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_exempt
@@ -69,65 +66,6 @@ def center(request):
         return render(request, 'center.html', context)
     else:
         return redirect(reverse('login'))
-
-
-# def bind_email(request):
-#     """绑定邮箱"""
-#     data = {}
-#     redirect_to = reverse('center')
-#     if request.method == 'POST':
-#         form = BindEmailForm(request.POST, request=request)
-#         if form.is_valid():
-#             email = form.cleaned_data['email']
-#             user = request.user
-#             user.email = email
-#             user.save()
-#             del request.session['bind_email_code']
-#             del request.session['send_code_time']
-#             data['status'] = 'SUCCESS'
-#         else:
-#             data['status'] = 'ERROR'
-#         return JsonResponse(data)
-#     else:
-#         form = BindEmailForm()
-#     context = {}
-#     context['form'] = form
-#     context['page_title'] = '绑定邮箱'
-#     context['form_title'] = '绑定邮箱'
-#     context['return_back_url'] = redirect_to
-#     context['submit_text'] = '提交'
-#     return render(request, 'bind_email.html', context)
-
-
-# def send_code_by_email(request):
-#     """发送邮件验证码"""
-#     email = request.GET.get('email', '').strip()
-#     send_for = request.GET.get('send_for', '')
-#     data = {}
-#     if email:
-#         code = ''.join(random.sample(string.digits, 4))
-#         now = int(time.time())
-#         send_code_time = request.session.get('send_code_time', 0)
-#         if now - send_code_time < 30:
-#             data['status'] = 'ERROR'
-#             data['msg'] = '验证码请求频率过快，请稍等'
-#         else:
-#             request.session['bind_email_code'] = code
-#             request.session['send_code_time'] = now
-#             # 发送邮件
-#             send_mail(
-#                 '邮箱绑定',
-#                 '验证码：%s' % code,
-#                 '1028813314@qq.com',
-#                 [email],
-#                 fail_silently=False,
-#             )
-#             data['status'] = 'SUCCESS'
-#             data['msg'] = '验证码发送成功，请注意查收'
-#     else:
-#         data['msg'] = '验证码请求失败，请重新获取'
-#         data['status'] = 'ERROR'
-#     return JsonResponse(data)
 
 
 def send_code_by_tel(request):

@@ -1,9 +1,8 @@
-from django.db import connections
 from django.http import JsonResponse
 from apscheduler.schedulers.background import BackgroundScheduler
 from django_apscheduler.jobstores import DjangoJobStore, register_events, register_job
 from .sign import local_run
-from .exec_sign_task import start_run
+from .exec_sign_task import to_sign_in_task, to_remind_cookie_failure
 
 
 # 实例化调度器
@@ -14,10 +13,16 @@ scheduler.add_jobstore(DjangoJobStore(), 'default')
 
 # @register_job(scheduler, 'interval', id='autosign', seconds=11)
 @register_job(scheduler, 'cron', id='autosign', hour=0, minute=2)
-def test():
+def autosign():
     # 具体要执行的代码
     print("执行打卡")
-    start_run()
+    to_sign_in_task()
+
+
+# @register_job(scheduler, 'interval', id='remind_cookie', seconds=11)
+@register_job(scheduler, 'cron', id='remind_cookie', hour=6, minute=0)
+def remind_cookie():
+    to_remind_cookie_failure()
 
 
 # 注册定时任务并开始

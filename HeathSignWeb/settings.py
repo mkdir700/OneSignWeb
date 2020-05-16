@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'user',
     'autosign',
     'wxpush',
+    'db_tools',
 ]
 
 MIDDLEWARE = [
