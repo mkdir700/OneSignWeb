@@ -47,9 +47,3 @@ class UserRegSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("登录失败,请稍后再试")
         del attrs['code']
         return attrs
-
-    # def validate(self, attrs):
-    #     # 数据库里没有code这个字段,在返回前,将他删除
-    #     attrs['cookie'] = 123
-    #     del attrs['code']
-    #     return attrs

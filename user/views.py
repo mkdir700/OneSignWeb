@@ -17,6 +17,15 @@ class UserViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     serializer_class = UserRegSerializer
     queryset = User.objects.all()
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = self.perform_create(serializer)
+
+
+
+    def perform_create(self, serializer):
+        return serializer.save()
     # def create(self, request, *args, **kwargs):
     #     """添加用户"""
     #     pass
