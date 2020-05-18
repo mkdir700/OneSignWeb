@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_apscheduler',
+    'rest_framework',
+    'rest_framework_jwt',
     'user',
     'autosign',
     'wxpush',
@@ -141,7 +143,6 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 8  # 30分钟
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
-
 # 邮箱设置
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.qq.com'
@@ -155,3 +156,17 @@ EMAIL_USE_TLS = True
 # CELERY_IMPORTS = ('app.tasks')
 # CELERY_TIMEZONE = 'Asia/Shanghai'
 # CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+}
+
+# 手机正则表达式
+REGEX_MOBILE = '^1[3|4|5|7|8]\d{9}$'

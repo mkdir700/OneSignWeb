@@ -4,7 +4,7 @@ from .models import User, SignRecord
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ['username', 'tel', 'is_active']
+    list_display = ['username', 'username', 'is_active']
     ordering = ("-id",)
 
 

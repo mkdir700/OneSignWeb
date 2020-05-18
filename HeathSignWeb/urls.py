@@ -15,13 +15,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from user.views import login
+# from user.views import login
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.contrib import staticfiles
 
 
 urlpatterns = [
-    path('', login),
+    # path('', login),
     path('admin/', admin.site.urls),
     path('', include('user.urls')),
     path('', include('autosign.urls')),
