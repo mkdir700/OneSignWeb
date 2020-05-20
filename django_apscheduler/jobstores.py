@@ -9,7 +9,7 @@ from apscheduler.jobstores.base import BaseJobStore, ConflictingIdError, JobLook
 from apscheduler.schedulers.base import BaseScheduler
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import connections
+from django.db import connections, close_old_connections
 from django.db.utils import OperationalError, ProgrammingError
 
 from django_apscheduler.models import DjangoJob
@@ -19,21 +19,17 @@ from django_apscheduler.util import deserialize_dt, serialize_dt
 LOGGER = logging.getLogger("django_apscheduler")
 
 
-def close_old_connections():
-    """关闭失效连接"""
-    for conn in connections.all():
-        conn.close_if_unusable_or_obsolete()
-
-
 def ignore_database_error(on_error_value=None):
     def dec(func):
         from functools import wraps
 
         @wraps(func)
         def inner(*a, **k):
-            close_old_connections()
             try:
-                return func(*a, **k)
+                close_old_connections()
+                x = func(*a, **k)
+                close_old_connections()
+                return x
             except (OperationalError, ProgrammingError) as e:
                 warnings.warn(
                     "Got OperationalError: {}. "
@@ -66,9 +62,6 @@ class DjangoJobStore(BaseJobStore):
             job_state = DjangoJob.objects.get(name=job_id).job_state
         except DjangoJob.DoesNotExist:
             return None
-        # except OperationalError:
-        for conn in connections.all():
-            conn.close_if_unusable_or_obsolete()
 
         r = self._reconstitute_job(job_state) if job_state else None
         LOGGER.debug("Got %s", r)
