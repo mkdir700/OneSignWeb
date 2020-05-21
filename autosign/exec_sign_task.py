@@ -20,20 +20,14 @@ def to_sign_in_task():
     """开始签到任务"""
     tasks = SignTasks.objects.filter(is_active=True)
     for task in tasks:
-        # close_old_connections()
         user = User.objects.get(id=task.user_id)
-        # close_old_connections()
         res = local_run(user.cookie)
         # 记录签到日志
         if res['status']:
-            # close_old_connections()
-            SignRecord(user=user, sign_active=False).save()
-            # close_old_connections()
+            SignRecord(user=user, sign_active=True).save()
             content = '用户' + user.username + '\r\n今日健康码打卡消息来啦！\r\n' + '健康码自动打卡成功'
         else:
-            # close_old_connections()
             SignRecord(user=user, sign_active=False).save()
-            # close_old_connections()
             content = 'cookie失效,自动打卡失败\n请进入网站 http://one.z2blog.com 更新cookie'
         if user.wxPushKey:
             send_message(
