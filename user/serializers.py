@@ -7,6 +7,7 @@ User = get_user_model()
 
 
 class SmsSerializer(serializers.Serializer):
+    """短信验证码"""
     mobile = serializers.CharField(max_length=11, required=True)
 
     def validate_mobile(self, mobile):
@@ -18,6 +19,7 @@ class SmsSerializer(serializers.Serializer):
 
 
 class UserRegSerializer(serializers.ModelSerializer):
+    """用户手机号码注册序列化器"""
     code = serializers.CharField(required=True, max_length=6, min_length=6, write_only=True,
                                  error_messages={
                                      'blank': '验证码不能为空',
@@ -26,6 +28,13 @@ class UserRegSerializer(serializers.ModelSerializer):
                                      'min_length': '验证码长度错误',
                                  },
                                  help_text='验证码')
+    username = serializers.CharField(required=True, min_length=11, max_length=11,
+                                     error_messages={
+                                         'blank': '手机号码不能为空',
+                                         'required': '手机号码不能为空',
+                                         'max_length': '验证码长度错误',
+                                         'min_length': '验证码长度错误',
+                                     })
 
     class Meta:
         model = User
@@ -35,6 +44,13 @@ class UserRegSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         return User.objects.create_user(username=validated_data['username'], tel=validated_data['username'],
                                         cookie=validated_data['cookie'])
+
+    def validated_username(self, username):
+        """验证手机是否有效"""
+        # 验证手机号码是否合法
+        if not re.match(settings.REGEX_MOBILE, username):
+            raise serializers.ValidationError("手机号码不合法")
+        return username
 
     def validate(self, attrs):
         """验证手机号码"""
