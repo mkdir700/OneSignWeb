@@ -20,8 +20,8 @@ class User(AbstractUser):
     class Meta(AbstractUser.Meta):
         pass
 
-    # def __str__(self):
-    #     return self.tel
+    def __str__(self):
+        return self.tel
 
     # @staticmethod
     def check_verify_code(self, username, password):

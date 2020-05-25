@@ -32,9 +32,9 @@ class UserRegSerializer(serializers.ModelSerializer):
         fields = ['username', 'code']
 
     # 创建用户方法一: 在序列化器内重写create方法
-    # def create(self, validated_data):
-    #     return User.objects.create_user(username=validated_data['username'], tel=validated_data['username'],
-    #                                     cookie=validated_data['cookie'])
+    def create(self, validated_data):
+        return User.objects.create_user(username=validated_data['username'], tel=validated_data['username'],
+                                        cookie=validated_data['cookie'])
 
     def validate(self, attrs):
         """验证手机号码"""

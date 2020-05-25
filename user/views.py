@@ -23,23 +23,6 @@ class UserViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         user = self.perform_create(serializer)
 
 
-
-    def perform_create(self, serializer):
-        return serializer.save()
-    # def create(self, request, *args, **kwargs):
-    #     """添加用户"""
-    #     pass
-    # def get(self):
-    #     """返回登录
-    #     is_login: 是否登录
-    #     """
-    #     pass
-    #
-    # def post(self):
-    #     """登录请求"""
-    #     pass
-
-
 class UserCenterView(APIView):
 
     def get(self):

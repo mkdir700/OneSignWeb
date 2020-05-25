@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/3.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.0/ref/settings/
 """
-
+import datetime
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -159,13 +159,23 @@ EMAIL_USE_TLS = True
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
+        # 'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
+        # 'rest_framework.authentication.SessionAuthentication',
+        # 'rest_framework.authentication.BasicAuthentication',
     ),
+}
+
+JWT_AUTH = {
+    # token 有效期
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(hours=8),
+    'JWT_ALLOW_REFRESH': True,
+    # 续期有效期（该设置可在24小时内带未失效的token 进行续期）
+    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(hours=24),
+    # 自定义返回格式，需要手工创建
+    'JWT_RESPONSE_PAYLOAD_HANDLER': 'user.utils.jwt_response_payload_handler',
 }
 
 # 手机正则表达式
