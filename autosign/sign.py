@@ -120,7 +120,11 @@ class HeathSign(object):
         else:
             return False
 
-    def __get_user_info(self):
+    def get_last_report(self):
+        """获取用户上次上报的信息"""
+        pass
+
+    def get_user_info(self):
         """获取个人信息"""
         url = 'https://www.ioteams.com/ncov/api/users/healthDetail'
         r = self.session.get(url, headers=self.headers)
@@ -129,7 +133,6 @@ class HeathSign(object):
         self.user_id = data["data"]["data"]["_id"]
         self.latestReport = data["data"]["data"]["latestReport"]
         address = data["data"]["data"]["address"]
-        # todo 部分用户取不到lastHealthReport
         try:
             lastHealthReport = data["data"]["data"]["lastHealthReport"]
         except:
@@ -206,7 +209,7 @@ class HeathSign(object):
 
     def run(self) -> dict:
         cookies = self.__save_cookies()
-        self.__get_user_info()
+        self.get_user_info()
 
         h1 = self.__daily_reports()
         h2 = self.__health_report()

@@ -27,6 +27,20 @@ class User(AbstractUser):
     def check_verify_code(username, password):
         return cloud_run(username, password)
 
+    def cookie_is_valid(self) -> bool:
+        """判断用户cookie当前是否有效"""
+        now = datetime.datetime.now()
+        # 明天的0点时间
+        zero_tomorrow = now + datetime.timedelta(days=1, hours=-now.hour, minutes=-now.minute + 2, seconds=-now.second,
+                                                 microseconds=-now.microsecond)
+        return True if self.cookie_expired_time > zero_tomorrow else False
+    cookie_is_valid.short_description = 'cookie是否有效'
+
+    def wx_push_is_bind(self) -> bool:
+        """用户是否绑定wxpush"""
+        return True if self.wxPushKey else False
+    wx_push_is_bind.short_description = '是否绑定wxPush'
+
     def update_cookie_expire_time(self):
         """更新cookie的失效时间"""
         self.cookie_expired_time = datetime.datetime.fromtimestamp(self.last_login.timestamp() + 864000)

@@ -12,8 +12,8 @@ scheduler = BackgroundScheduler()
 scheduler.add_jobstore(DjangoJobStore(), 'default')
 
 
-@register_job(scheduler, 'interval', id='autosign', seconds=30)
-# @register_job(scheduler, 'cron', id='autosign', hour=0, minute=2)
+# @register_job(scheduler, 'interval', id='autosign', seconds=30)
+@register_job(scheduler, 'cron', id='autosign', hour=0, minute=2)
 def autosign():
     # 具体要执行的代码
     close_old_connections()
