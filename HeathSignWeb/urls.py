@@ -17,6 +17,7 @@ from django.contrib import admin
 from django.urls import path, include
 # from user.views import login
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from rest_framework.documentation import include_docs_urls
 from django.contrib import staticfiles
 
 
@@ -25,6 +26,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('user.urls')),
     path('', include('autosign.urls')),
+    path('docs/', include_docs_urls(title="健康码打卡")),
     path('wxpush/', include('wxpush.urls')),
 ]
 

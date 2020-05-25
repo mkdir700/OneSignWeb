@@ -12,7 +12,6 @@ class SmsSerializer(serializers.Serializer):
 
     def validate_mobile(self, mobile):
         """验证手机是否有效"""
-        # 验证手机号码是否合法
         if not re.match(settings.REGEX_MOBILE, mobile):
             raise serializers.ValidationError("手机号码不合法")
         return mobile
@@ -53,7 +52,7 @@ class UserRegSerializer(serializers.ModelSerializer):
         return username
 
     def validate(self, attrs):
-        """验证手机号码"""
+        """验证登录"""
         if not User.objects.filter(username=attrs['username']).exists():
             # 用户不存在,需要去验证是否登录成功
             res = User.check_verify_code(self, attrs['username'], attrs['code'])
@@ -63,3 +62,10 @@ class UserRegSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("登录失败,请稍后再试")
         del attrs['code']
         return attrs
+
+
+class UserDetailSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ['username', 'wxPushKey', 'cookie_expired_time']
