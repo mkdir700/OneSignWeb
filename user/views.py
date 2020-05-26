@@ -33,6 +33,8 @@ class UserViewSet(mixins.CreateModelMixin,
         elif self.action == "create":
             # 新建用户
             return UserRegSerializer
+        elif self.action == "update":
+            return UserRegSerializer
         return UserRegSerializer
 
     def get_permissions(self):
@@ -54,10 +56,26 @@ class UserViewSet(mixins.CreateModelMixin,
         headers = self.get_success_headers(serializer.data)
         return Response(re_dict, status=status.HTTP_201_CREATED, headers=headers)
 
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        user = self.perform_update(serializer)
+        re_dict = serializer.data
+        payload = jwt_payload_handler(user)
+        re_dict["token"] = jwt_encode_handler(payload)
+        re_dict["username"] = user.username
+        # headers = self.get_success_headers(serializer.data)
+        return Response(re_dict, status=status.HTTP_201_CREATED)
+
     def get_object(self):
         return self.request.user
 
     def perform_create(self, serializer):
+        return serializer.save()
+
+    def perform_update(self, serializer):
         return serializer.save()
 
 

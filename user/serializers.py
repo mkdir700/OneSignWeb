@@ -1,4 +1,5 @@
 import re
+from django.utils import timezone
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from HeathSignWeb import settings
@@ -45,14 +46,16 @@ class UserRegSerializer(serializers.ModelSerializer):
                                         cookie=validated_data['cookie'])
 
     def update(self, instance, validated_data):
-        user = instance
+        user = validated_data['user']
         # TODO 更新用户名
-        user.first_name = validated_data['data']['data']['username']
-        # 更新last_time
+        user.first_name = validated_data['info']['data']['data']['userName']
         # 更新cookie
         user.cookie = validated_data['cookie']
+        # 更新last_time
+        user.last_login = timezone.now()
         user.save()
         user.update_cookie_expire_time()
+        return user
 
     def validated_username(self, username):
         """验证手机是否有效"""
@@ -63,13 +66,15 @@ class UserRegSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         """验证登录"""
-        if not User.objects.filter(username=attrs['username']).exists():
-            # 用户不存在,需要去验证是否登录成功
-            res = User.check_verify_code(self, attrs['username'], attrs['code'])
-            if res['status']:
-                attrs['cookie'] = res['cookies']
-            else:
-                raise serializers.ValidationError("登录失败,请稍后再试")
+        # if not User.objects.filter(username=attrs['username']).exists():
+        # 用户不存在,需要去验证是否登录成功
+        res = User.check_verify_code(self, attrs['username'], attrs['code'])
+        if res['status']:
+            attrs['user'] = User.objects.filter(username=attrs['username']).first()
+            attrs['cookie'] = res['cookies']
+            attrs['info'] = res['info']
+        else:
+            raise serializers.ValidationError("登录失败,请稍后再试")
         del attrs['code']
         return attrs
 

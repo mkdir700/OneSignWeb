@@ -6,7 +6,7 @@ from . import views
 
 router = routers.DefaultRouter()
 router.register(r'sendTelCode', SmsCodeViewSet, basename="sendTelCode")
-router.register(r'users', UserViewSet, basename="users")
+router.register(r'user', UserViewSet, basename="user")
 
 
 urlpatterns = [
