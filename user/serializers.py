@@ -44,6 +44,16 @@ class UserRegSerializer(serializers.ModelSerializer):
         return User.objects.create_user(username=validated_data['username'], tel=validated_data['username'],
                                         cookie=validated_data['cookie'])
 
+    def update(self, instance, validated_data):
+        user = instance
+        # TODO 更新用户名
+        user.first_name = validated_data['data']['data']['username']
+        # 更新last_time
+        # 更新cookie
+        user.cookie = validated_data['cookie']
+        user.save()
+        user.update_cookie_expire_time()
+
     def validated_username(self, username):
         """验证手机是否有效"""
         # 验证手机号码是否合法
@@ -62,6 +72,13 @@ class UserRegSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("登录失败,请稍后再试")
         del attrs['code']
         return attrs
+
+
+# class UserLoginSerializer(serializers.ModelSerializer):
+#
+#     class Meta:
+#         model = User
+#         fields = ['username', 'code']
 
 
 class UserDetailSerializer(serializers.ModelSerializer):

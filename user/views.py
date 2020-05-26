@@ -11,16 +11,17 @@ from rest_framework_jwt.serializers import jwt_encode_handler, jwt_payload_handl
 from .serializers import SmsSerializer, UserRegSerializer, UserDetailSerializer
 from autosign.sign import get_code as authcode
 
-
 User = get_user_model()
 
 
-class UserViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet, mixins.RetrieveModelMixin):
-
+class UserViewSet(mixins.CreateModelMixin,
+                  viewsets.GenericViewSet,
+                  mixins.RetrieveModelMixin,
+                  mixins.UpdateModelMixin):
     serializer_class = UserRegSerializer
     queryset = User.objects.all()
     # 用户登录的情况下,才能继续下面的操作
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
 
@@ -32,7 +33,7 @@ class UserViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet, mixins.Retri
         elif self.action == "create":
             # 新建用户
             return UserRegSerializer
-        return UserDetailSerializer
+        return UserRegSerializer
 
     def get_permissions(self):
         if self.action == "retrieve":
@@ -61,7 +62,6 @@ class UserViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet, mixins.Retri
 
 
 class SmsCodeViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
-
     serializer_class = SmsSerializer
 
     def create(self, request, *args, **kwargs):

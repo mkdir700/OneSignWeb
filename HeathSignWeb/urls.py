@@ -22,7 +22,6 @@ from django.contrib import staticfiles
 
 
 urlpatterns = [
-    # path('', login),
     path('admin/', admin.site.urls),
     path('', include('user.urls')),
     path('', include('autosign.urls')),
