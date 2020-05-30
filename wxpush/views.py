@@ -27,6 +27,7 @@ def pushCallBack(request):
 
 
 def get_qrcode_for_user(request):
+    """为当前用户创建绑定的二维码"""
     user = request.user
     if user.is_authenticated:
         resp = create_qrcode(user.username)
