@@ -21,6 +21,7 @@ class SmsSerializer(serializers.Serializer):
 
 
 class SignRecordSerializer(serializers.ModelSerializer):
+    """签到记录序列化器"""
     user = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
@@ -29,7 +30,7 @@ class SignRecordSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """用户手机号码注册序列化器"""
+    """用户序列化器"""
     code = serializers.CharField(
         required=True,
         max_length=6,
@@ -41,7 +42,8 @@ class UserSerializer(serializers.ModelSerializer):
             'max_length': '验证码长度错误',
             'min_length': '验证码长度错误',
         },
-        help_text='验证码')
+        help_text='验证码'
+    )
     username = serializers.CharField(
         required=True,
         min_length=11,
@@ -51,7 +53,9 @@ class UserSerializer(serializers.ModelSerializer):
             'required': '手机号码不能为空',
             'max_length': '验证码长度错误',
             'min_length': '验证码长度错误',
-        })
+        },
+        help_text='手机号码'
+    )
 
     class Meta:
         model = User
@@ -103,13 +107,14 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
-
+    """用户详细信息"""
     id = serializers.IntegerField(
         required=True,
         error_messages={
             'blank': '不能为空',
             'required': '用户id必须填写'
-        }
+        },
+        help_text='用户id'
     )
     real_name = serializers.SerializerMethodField()
     is_sign_today = serializers.SerializerMethodField()

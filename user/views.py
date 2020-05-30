@@ -17,9 +17,8 @@ User = get_user_model()
 
 
 class UserViewSet(mixins.CreateModelMixin,
-                  mixins.ListModelMixin,
-                  viewsets.GenericViewSet,
-                  mixins.RetrieveModelMixin):
+                  viewsets.ReadOnlyModelViewSet,
+                  viewsets.GenericViewSet,):
     serializer_class = UserSerializer
     # 用户登录的情况下,才能继续下面的操作
     permission_classes = [IsAuthenticated]
@@ -66,7 +65,7 @@ class UserViewSet(mixins.CreateModelMixin,
 
     @action(detail=True, methods=['GET'])
     def records(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset(kwargs['pk']))
+        queryset = self.filter_queryset(self.get_queryset(request.user))
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -74,8 +73,8 @@ class UserViewSet(mixins.CreateModelMixin,
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    def get_queryset(self, user_id=None):
-        queryset = SignRecord.objects.all().filter(user_id=user_id)
+    def get_queryset(self, user=None):
+        queryset = SignRecord.objects.all().filter(user_id=user)
         return queryset
 
     def get_object(self):
