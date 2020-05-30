@@ -1,4 +1,5 @@
 import re
+import datetime
 from django.utils import timezone
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
@@ -17,6 +18,17 @@ class SmsSerializer(serializers.Serializer):
         if not re.match(settings.REGEX_MOBILE, mobile):
             raise serializers.ValidationError("手机号码不合法")
         return mobile
+
+
+class SignRecordSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = SignRecord
+        fields = ['user', 'sign_time', 'sign_active']
+
+    def validate(self, attrs):
+        user = attrs['user']
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -99,17 +111,35 @@ class UserDetailSerializer(serializers.ModelSerializer):
         required=True,
         error_messages={
             'blank': '不能为空',
-            'required': '用户id必填'
+            'required': '用户id必须填写'
         }
     )
+    real_name = serializers.SerializerMethodField()
+    is_sign_today = serializers.SerializerMethodField()
+    records = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'last_login', 'wxPushKey', 'cookie_expired_time', 'is_today']
+        fields = ['id', 'username', 'last_login', 'wxPushKey', 'cookie_expired_time', 'real_name', 'is_sign_today',
+                  'records']
+        extra_kwargs = {
+            'username': {'read_only': True},
+        }
 
-    def validate(self, attrs):
-        user = User.objects.filter(id=attrs['id']).first()
+    @staticmethod
+    def get_real_name(obj) -> str:
+        return obj.last_name
+
+    @staticmethod
+    def get_is_sign_today(obj) -> bool:
+        now = datetime.datetime.now()
+        zeroToday = now - datetime.timedelta(hours=now.hour, minutes=now.minute, seconds=now.second,
+                                             microseconds=now.microsecond)
+        # lastToday = zeroToday + datetime.timedelta(hours=23, minutes=59, seconds=59)
+        return SignRecord.objects.filter(user=obj, sign_time__range=(zeroToday, now), sign_active=True).exists()
+
+    @staticmethod
+    def get_records(obj):
         # 默认输出前6条记录
-        attrs['records'] = SignRecord.objects.filter(user=user)[:6]
-        # 今日打卡状态
-        attrs['is_today'] = SignRecord.objects.filter(id=attrs['id']).last()
+        records = SignRecord.objects.filter(user=obj).values('id', 'sign_time', 'sign_active')[:5]
+        return records

@@ -8,16 +8,17 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticate
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.serializers import jwt_encode_handler, jwt_payload_handler
 
-from .serializers import SmsSerializer, UserSerializer, UserDetailSerializer
+from .models import SignRecord
+from .serializers import SmsSerializer, UserSerializer, UserDetailSerializer, SignRecordSerializer
 from autosign.sign import get_code as authcode
 
 User = get_user_model()
 
 
 class UserViewSet(mixins.CreateModelMixin,
+                  mixins.ListModelMixin,
                   viewsets.GenericViewSet,
-                  mixins.RetrieveModelMixin,
-                  mixins.UpdateModelMixin):
+                  mixins.RetrieveModelMixin):
     serializer_class = UserSerializer
     # 用户登录的情况下,才能继续下面的操作
     permission_classes = [IsAuthenticated]
@@ -31,10 +32,12 @@ class UserViewSet(mixins.CreateModelMixin,
         elif self.action == "create":
             # 新建用户
             return UserSerializer
+        elif self.action == "list":
+            return SignRecordSerializer
         return UserSerializer
 
     def get_permissions(self):
-        if self.action == "retrieve":
+        if self.action == "retrieve" or self.action == "list":
             return [permission() for permission in self.permission_classes]
         elif self.action == "create":
             return []
@@ -54,6 +57,12 @@ class UserViewSet(mixins.CreateModelMixin,
         headers = self.get_success_headers(serializer.data)
         return Response(re_dict, status=status.HTTP_200_OK, headers=headers)
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data={'id': kwargs['pk']})
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
     def get_object(self):
         return self.request.user
 
@@ -72,3 +81,19 @@ class SmsCodeViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             return Response(data={'msg': '验证码请求成功'}, status=status.HTTP_200_OK)
         else:
             return Response(data={'msg': '验证码请求失败'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SignRecordViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    serializer_class = SignRecordSerializer
+    queryset = SignRecord.objects.all()
+    authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True, data=request.user)
+        return Response(serializer.data)
