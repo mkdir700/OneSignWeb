@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import viewsets
 from rest_framework import status
@@ -32,12 +33,12 @@ class UserViewSet(mixins.CreateModelMixin,
         elif self.action == "create":
             # 新建用户
             return UserSerializer
-        elif self.action == "list":
+        elif self.action == "records":
             return SignRecordSerializer
         return UserSerializer
 
     def get_permissions(self):
-        if self.action == "retrieve" or self.action == "list":
+        if self.action == "retrieve" or self.action == "records":
             return [permission() for permission in self.permission_classes]
         elif self.action == "create":
             return []
@@ -62,6 +63,20 @@ class UserViewSet(mixins.CreateModelMixin,
         serializer = self.get_serializer(instance, data={'id': kwargs['pk']})
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['GET'])
+    def records(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset(kwargs['pk']))
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def get_queryset(self, user_id=None):
+        queryset = SignRecord.objects.all().filter(user_id=user_id)
+        return queryset
 
     def get_object(self):
         return self.request.user

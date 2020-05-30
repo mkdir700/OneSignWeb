@@ -27,9 +27,6 @@ class SignRecordSerializer(serializers.ModelSerializer):
         model = SignRecord
         fields = ['user', 'sign_time', 'sign_active']
 
-    def validate(self, attrs):
-        user = attrs['user']
-
 
 class UserSerializer(serializers.ModelSerializer):
     """用户手机号码注册序列化器"""
