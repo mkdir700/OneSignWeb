@@ -18,7 +18,7 @@ def send_message(uids: list, content: str):
 
 def create_qrcode(username):
     """创建二维码
-    :param extra 额外参数，可以用手机号
+    :param username: 手机号码
     """
     return WxPusher.create_qrcode(extra=username, token=token)
 # WxPusher.query_user('<page>', '<page_size>', '<appToken>')
