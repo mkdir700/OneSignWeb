@@ -5,24 +5,24 @@ from rest_framework import viewsets
 from rest_framework import status
 from rest_framework import mixins
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.serializers import jwt_encode_handler, jwt_payload_handler
 from django_filters import rest_framework as filters
 
 from .models import SignRecord
-from .serializers import SmsSerializer, UserSerializer, UserDetailSerializer, SignRecordSerializer
+from .serializers import SmsSerializer, UserSerializer, \
+    UserDetailSerializer, SignRecordSerializer, WxPushSerializer
 from autosign.sign import get_code as authcode
 from .filters import SignRecordFilter
 from .paginations import SignRecordPagination
-
 
 User = get_user_model()
 
 
 class UserViewSet(mixins.CreateModelMixin,
                   viewsets.ReadOnlyModelViewSet,
-                  viewsets.GenericViewSet,):
+                  viewsets.GenericViewSet, ):
     # 序列化类
     serializer_class = UserSerializer
     # 过滤器
@@ -108,7 +108,6 @@ class SmsCodeViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
 
 class SignRecordViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
-
     # 序列化类
     serializer_class = SignRecordSerializer
     # 过滤器
@@ -128,3 +127,11 @@ class SignRecordViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
         serializer = self.get_serializer(queryset, many=True, data=request.user)
         return Response(serializer.data)
+
+
+class BindWxPushViewSet(viewsets.GenericViewSet, mixins.UpdateModelMixin):
+    serializer_class = WxPushSerializer
+    authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
+
+    def get_object(self):
+        return self.request.user

@@ -1,5 +1,7 @@
 import re
 import datetime
+from abc import ABC
+
 from django.utils import timezone
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
@@ -11,7 +13,14 @@ User = get_user_model()
 
 class SmsSerializer(serializers.Serializer):
     """短信验证码"""
+
     mobile = serializers.CharField(max_length=11, required=True)
+
+    def update(self, instance, validated_data):
+        pass
+
+    def create(self, validated_data):
+        pass
 
     def validate_mobile(self, mobile):
         """验证手机是否有效"""
@@ -27,7 +36,6 @@ class SignRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = SignRecord
         fields = ['user', 'sign_time', 'sign_active']
-
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -147,3 +155,27 @@ class UserDetailSerializer(serializers.ModelSerializer):
         # 默认输出前6条记录
         records = SignRecord.objects.filter(user=obj).values('id', 'sign_time', 'sign_active')[:5]
         return records
+
+
+class WxPushSerializer(serializers.Serializer):
+
+    wx_push_key = serializers.CharField(
+        required=True,
+        error_messages={
+            'required': 'wx_push_key必填'
+        },
+        help_text='用于绑定微信推送',
+        source='wxPushKey',
+        write_only=True
+    )
+
+    class Meta:
+        fields = ['wxPushKey']
+
+    def create(self, validated_data):
+        pass
+
+    def update(self, instance, validated_data):
+        instance.wxPushKey = validated_data['wxPushKey']
+        instance.save()
+        return instance

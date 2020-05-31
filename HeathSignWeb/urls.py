@@ -22,8 +22,8 @@ from django.contrib import staticfiles
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('user.urls')),
-    path('', include('autosign.urls')),
+    path('api/', include('user.urls')),
+    path('api/', include('autosign.urls')),
     path('docs/', include_docs_urls(title="健康码打卡")),
     path('wxpush/', include('wxpush.urls')),
 ]
