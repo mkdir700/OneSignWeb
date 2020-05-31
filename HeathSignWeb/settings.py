@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django_apscheduler',
     'rest_framework',
     'rest_framework_jwt',
+    'django_filters',
     'user',
     'autosign',
     'wxpush',

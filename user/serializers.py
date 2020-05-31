@@ -21,12 +21,13 @@ class SmsSerializer(serializers.Serializer):
 
 
 class SignRecordSerializer(serializers.ModelSerializer):
-    """签到记录序列化器"""
+    """签到记录序列化"""
     user = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = SignRecord
         fields = ['user', 'sign_time', 'sign_active']
+
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -138,6 +139,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
         zeroToday = now - datetime.timedelta(hours=now.hour, minutes=now.minute, seconds=now.second,
                                              microseconds=now.microsecond)
         # lastToday = zeroToday + datetime.timedelta(hours=23, minutes=59, seconds=59)
+        # return SignRecord.objects.filter(user=obj, sign_time__range=(zeroToday, now), sign_active=True).exists()
         return SignRecord.objects.filter(user=obj, sign_time__range=(zeroToday, now), sign_active=True).exists()
 
     @staticmethod

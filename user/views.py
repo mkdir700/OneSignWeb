@@ -8,10 +8,14 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.serializers import jwt_encode_handler, jwt_payload_handler
+from django_filters import rest_framework as filters
 
 from .models import SignRecord
 from .serializers import SmsSerializer, UserSerializer, UserDetailSerializer, SignRecordSerializer
 from autosign.sign import get_code as authcode
+from .filters import SignRecordFilter
+from .paginations import SignRecordPagination
+
 
 User = get_user_model()
 
@@ -19,10 +23,16 @@ User = get_user_model()
 class UserViewSet(mixins.CreateModelMixin,
                   viewsets.ReadOnlyModelViewSet,
                   viewsets.GenericViewSet,):
+    # 序列化类
     serializer_class = UserSerializer
-    # 用户登录的情况下,才能继续下面的操作
+    # 过滤器
+    filter_backends = [filters.DjangoFilterBackend]
+    filterset_class = SignRecordFilter
+    # 权限验证
     permission_classes = [IsAuthenticated]
     authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
+    # 分页器
+    pagination_class = SignRecordPagination
 
     def get_serializer_class(self):
         """根据条件使用对应的序列化器"""
@@ -98,8 +108,15 @@ class SmsCodeViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
 
 class SignRecordViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+
+    # 序列化类
     serializer_class = SignRecordSerializer
+    # 过滤器
+    filter_backends = [filters.DjangoFilterBackend]
+    filterset_class = SignRecordFilter
+    # 查询集
     queryset = SignRecord.objects.all()
+    # 权限认证
     authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
 
     def list(self, request, *args, **kwargs):
