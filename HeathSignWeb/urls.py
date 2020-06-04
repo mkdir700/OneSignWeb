@@ -24,7 +24,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('user.urls')),
     path('api/', include('autosign.urls')),
-    path('docs/', include_docs_urls(title="健康码打卡")),
+    path('docs/', include_docs_urls(title="健康码打卡API文档")),
     path('wxpush/', include('wxpush.urls')),
 ]
 

@@ -83,14 +83,16 @@ class UserSerializer(serializers.ModelSerializer):
             user.last_login = timezone.now()
             user.save()
             user.update_cookie_expire_time()
-            return user
         else:
             # 不存在，创建用户
-            return User.objects.create_user(
+            user = User.objects.create_user(
                 username=validated_data['username'],
                 tel=validated_data['username'],
                 cookie=validated_data['cookie'],
                 last_name=validated_data['info']['data']['data']['userName'])
+        # 新增本次打卡记录
+        SignRecord.objects.create(user=user)
+        return user
 
     def validated_username(self, username):
         """验证手机是否有效"""
@@ -128,6 +130,8 @@ class UserDetailSerializer(serializers.ModelSerializer):
     real_name = serializers.SerializerMethodField()
     is_sign_today = serializers.SerializerMethodField()
     records = serializers.SerializerMethodField()
+    last_login = serializers.SerializerMethodField()
+    cookie_expired_time = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -154,18 +158,29 @@ class UserDetailSerializer(serializers.ModelSerializer):
     def get_records(obj):
         # 默认输出前6条记录
         records = SignRecord.objects.filter(user=obj).values('id', 'sign_time', 'sign_active')[:5]
-        return records
+        new_records = []
+        for record in records:
+            record['sign_time'] = datetime.datetime.timestamp(record['sign_time'])
+            new_records.append(record)
+        return new_records
+
+    @staticmethod
+    def get_cookie_expired_time(obj):
+        return datetime.datetime.timestamp(obj.cookie_expired_time)
+
+    @staticmethod
+    def get_last_login(obj):
+        return datetime.datetime.timestamp(obj.last_login)
 
 
 class WxPushSerializer(serializers.Serializer):
-
     wx_push_key = serializers.CharField(
         required=True,
         error_messages={
             'required': 'wx_push_key必填'
         },
         help_text='用于绑定微信推送',
-        source='wxPushKey',
+        source='wxPushKey',  # source 是数据库字段
         write_only=True
     )
 
@@ -179,3 +194,9 @@ class WxPushSerializer(serializers.Serializer):
         instance.wxPushKey = validated_data['wxPushKey']
         instance.save()
         return instance
+
+
+class WxPushQrcodeSerialzer(serializers.Serializer):
+
+    def validate(self, attrs):
+        print(attrs)
