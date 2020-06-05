@@ -1,7 +1,5 @@
 import re
 import datetime
-from abc import ABC
-
 from django.utils import timezone
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
@@ -194,9 +192,3 @@ class WxPushSerializer(serializers.Serializer):
         instance.wxPushKey = validated_data['wxPushKey']
         instance.save()
         return instance
-
-
-class WxPushQrcodeSerialzer(serializers.Serializer):
-
-    def validate(self, attrs):
-        print(attrs)
