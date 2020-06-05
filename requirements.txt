@@ -28,3 +28,5 @@ djangorestframework~=3.11.0
 djangorestframework-jwt~=1.11.0
 django-filter~=2.2.0
 django-cors-headers
+simpleui
+coreapi

@@ -49,7 +49,6 @@ INSTALLED_APPS = [
     'corsheaders',
     'user',
     'autosign',
-    'wxpush',
     'db_tools',
 ]
 

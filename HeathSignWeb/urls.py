@@ -25,7 +25,6 @@ urlpatterns = [
     path('api/', include('user.urls')),
     path('api/', include('autosign.urls')),
     path('docs/', include_docs_urls(title="健康码打卡API文档")),
-    path('wxpush/', include('wxpush.urls')),
 ]
 
 urlpatterns += staticfiles_urlpatterns()

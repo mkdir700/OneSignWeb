@@ -1,24 +1,24 @@
 import datetime
+import json
 from django.contrib.auth import get_user_model
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework import viewsets
-from rest_framework import mixins
+from django_filters import rest_framework as filters
 from rest_framework.views import APIView
+from rest_framework import status, viewsets, mixins
 from rest_framework.authentication import SessionAuthentication
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.serializers import jwt_encode_handler, jwt_payload_handler
-from django_filters import rest_framework as filters
 
-from .models import SignRecord
-from .serializers import SmsSerializer, UserSerializer, \
-    UserDetailSerializer, SignRecordSerializer, WxPushSerializer
 from autosign.sign import get_code as authcode
 from .filters import SignRecordFilter
+from .models import SignRecord
 from .paginations import SignRecordPagination
-from .utils import create_qrcode
+from .serializers import SmsSerializer, UserSerializer, \
+    UserDetailSerializer, SignRecordSerializer, WxPushSerializer
+from .utils import create_qrcode, send_message
+from .config import callback_key
 
 User = get_user_model()
 
@@ -97,8 +97,8 @@ class UserViewSet(mixins.CreateModelMixin,
     @action(detail=True, methods=['GET'])
     def qrcode(self, request, *args, **kwargs):
         """获取绑定的二维码"""
-
-        return Response(data=create_qrcode(request.user.username), status=status.HTTP_200_OK)
+        extra = callback_key + '/' + request.user.username
+        return Response(data=create_qrcode(json.dumps(extra)), status=status.HTTP_200_OK)
 
     def get_queryset(self, user=None):
         queryset = SignRecord.objects.all().filter(user_id=user)
@@ -160,7 +160,24 @@ class BindWxPushViewSet(viewsets.GenericViewSet, mixins.UpdateModelMixin):
         return self.request.user
 
 
-# class WxPushQrcode(APIView):
-#
-#     def get(self, request, format=None):
-#         serializer = request.user
+class WxPushCallBackView(APIView):
+    """留给wxpush的回调接口"""
+
+    def post(self, request, format=None):
+        data = json.loads(request.body)
+
+        # 获取回调密钥，防止恶意利用
+        extra = data.get('data').get('extra', '')
+        key, username = extra.split('/') if '/' in extra else ('', '')
+        if key != callback_key:
+            return Response({'error': '此接口不对外开放'})
+
+        if data.get('action', '') == 'app_subscribe':
+            user = User.objects.filter(username=username).first()
+            user.wxPushKey = data.get('data').get('uid', '')
+            user.save()
+            send_message(
+                content='每日打卡消息会在此推送给您！\r\n如有问题，请联系qq1028813314',
+                uids=[user.wxPushKey, ]
+            )
+            return Response({'status': True, 'message': '绑定成功'}, status=status.HTTP_200_OK)

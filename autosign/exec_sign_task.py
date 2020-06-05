@@ -2,7 +2,7 @@ import datetime
 from django.db import close_old_connections
 from autosign.sign import local_run
 from user.models import SignRecord
-from wxpush.utils import send_message
+from user.utils import send_message
 from .models import SignTasks, User
 
 

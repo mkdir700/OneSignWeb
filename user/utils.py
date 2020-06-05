@@ -1,13 +1,5 @@
 from wxpusher import WxPusher
-# def jwt_response_payload_handler(token, user=None, request=None, role=None):
-#
-#     return {
-#         'authenticated': 'true',
-#         'username': user.username,
-#         'token': token
-#     }
-
-token = 'AT_dxgjVWxX6RThWd1QrfOokQBDBOHD6ag4'
+from .config import wxpush_token as token
 
 
 def send_message(uids: list, content: str):
@@ -19,8 +11,6 @@ def send_message(uids: list, content: str):
     WxPusher.send_message(content,
                           uids=uids,
                           token=token)
-
-# WxPusher.query_message('<messageId>')
 
 
 def create_qrcode(username):
