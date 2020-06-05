@@ -3,7 +3,7 @@ import datetime
 from django.utils import timezone
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from HeathSignWeb import settings
+from Core import settings
 from user.models import SignRecord
 
 User = get_user_model()

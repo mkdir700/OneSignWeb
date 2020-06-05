@@ -3,7 +3,7 @@ from django.db import close_old_connections
 from apscheduler.schedulers.background import BackgroundScheduler
 from django_apscheduler.jobstores import DjangoJobStore, register_events, register_job
 from .sign import local_run
-from .exec_sign_task import to_sign_in_task, to_remind_cookie_failure
+from .perform_tasks import perform_sign_task, remind_invalidated_cookies
 
 
 # 实例化调度器
@@ -12,13 +12,13 @@ scheduler = BackgroundScheduler()
 scheduler.add_jobstore(DjangoJobStore(), 'default')
 
 
-# @register_job(scheduler, 'interval', id='autosign', seconds=30)
-@register_job(scheduler, 'cron', id='autosign', hour=0, minute=2)
+@register_job(scheduler, 'interval', id='autosign', seconds=30)
+# @register_job(scheduler, 'cron', id='autosign', hour=0, minute=2)
 def autosign():
     # 具体要执行的代码
     close_old_connections()
     print("执行打卡")
-    to_sign_in_task()
+    perform_sign_task()
     close_old_connections()
 
 
@@ -26,7 +26,7 @@ def autosign():
 @register_job(scheduler, 'cron', id='remind_cookie', hour=6, minute=0)
 def remind_cookie():
     close_old_connections()
-    to_remind_cookie_failure()
+    remind_invalidated_cookies()
     close_old_connections()
 
 

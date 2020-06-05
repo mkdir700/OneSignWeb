@@ -16,7 +16,7 @@ def handle_db_connections(func):
 
 
 @handle_db_connections
-def to_sign_in_task():
+def perform_sign_task():
     """开始签到任务"""
     tasks = SignTasks.objects.filter(is_active=True)
     for task in tasks:
@@ -38,7 +38,7 @@ def to_sign_in_task():
 
 
 @handle_db_connections
-def to_remind_cookie_failure():
+def remind_invalidated_cookies():
     """推送消息给cookie即将失效的用户"""
     now = datetime.datetime.now()
     # 明天的0点时间
