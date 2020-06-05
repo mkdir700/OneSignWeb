@@ -1,12 +1,10 @@
-import datetime
 from django.contrib import admin
 from .models import User, SignRecord
 
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    # 新增cookie是否有效
-    list_display = ['username', 'is_active', 'cookie_is_valid', 'wx_push_is_bind']
+    list_display = ['username', 'tel', 'is_active']
     ordering = ("-id",)
 
 

@@ -1,81 +1,166 @@
-import time
 import datetime
-from django.contrib import auth
-from django.urls import reverse
-from django.http import JsonResponse
-from django.shortcuts import render, redirect
 from django.contrib.auth import get_user_model
-from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework import viewsets
+from rest_framework import mixins
+from rest_framework.views import APIView
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
+from rest_framework_jwt.serializers import jwt_encode_handler, jwt_payload_handler
+from django_filters import rest_framework as filters
 
-from autosign.sign import get_code as authcode
 from .models import SignRecord
-from autosign.models import SignTasks
+from .serializers import SmsSerializer, UserSerializer, \
+    UserDetailSerializer, SignRecordSerializer, WxPushSerializer
+from autosign.sign import get_code as authcode
+from .filters import SignRecordFilter
+from .paginations import SignRecordPagination
+from .utils import create_qrcode
 
 User = get_user_model()
 
 
-@csrf_exempt
-def login(request):
-    # 得到电话号码和验证码
-    if request.method == 'POST':
-        username = request.POST.get('username', '')
-        password = request.POST.get('password', '')
-        user = auth.authenticate(request, username=username, password=password)
-        # user.check_verify_code(username, password)
-        data = {}
-        # 请求签到链接，以此判断是否正确
-        if user:
-            # 校验成功后的两种情况：
-            auth.login(request, user)
-            # 添加本次签到记录
-            SignRecord(user=user).save()
-            # 将用户添加到任务表中
-            if not SignTasks.objects.filter(user=user).exists():
-                SignTasks(user=user).save()
-            # 更新易统计cookie失效时间
-            user.update_cookie_expire_time()
-            data['status'] = 'SUCCESS'
+class UserViewSet(mixins.CreateModelMixin,
+                  viewsets.ReadOnlyModelViewSet,
+                  viewsets.GenericViewSet, ):
+    """创建用户, 获取用户基本信息, 用户登录"""
+
+    # 序列化类
+    serializer_class = UserSerializer
+    # 过滤器
+    filter_backends = [filters.DjangoFilterBackend]
+    filterset_class = SignRecordFilter
+    # 权限验证
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
+    # 分页器
+    pagination_class = SignRecordPagination
+
+    def get_serializer_class(self):
+        """根据条件使用对应的序列化器"""
+        if self.action == "retrieve":
+            # 获取用户实例
+            return UserDetailSerializer
+        elif self.action == "create":
+            # 新建用户
+            return UserSerializer
+        elif self.action == "records":
+            return SignRecordSerializer
+        return UserSerializer
+
+    def get_permissions(self):
+        if self.action == "retrieve" or self.action == "records":
+            return [permission() for permission in self.permission_classes]
+        elif self.action == "create":
+            return []
+        return []
+
+    def create(self, request, *args, **kwargs):
+        """创建用户或登录"""
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = self.perform_create(serializer)
+        re_dict = serializer.data
+        payload = jwt_payload_handler(user)
+        re_dict['real_name'] = user.last_name
+        re_dict["username"] = user.username
+        last_login = user.last_login or user.date_joined
+        re_dict["last_login"] = datetime.datetime.timestamp(last_login)
+        re_dict["token"] = jwt_encode_handler(payload)
+        headers = self.get_success_headers(serializer.data)
+        return Response(re_dict, status=status.HTTP_200_OK, headers=headers)
+
+    def retrieve(self, request, *args, **kwargs):
+        """获取用户基本信息"""
+
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data={'id': kwargs['pk']})
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['GET'])
+    def records(self, request, *args, **kwargs):
+        """获取用户前5条签到记录"""
+
+        queryset = self.filter_queryset(self.get_queryset(request.user))
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['GET'])
+    def qrcode(self, request, *args, **kwargs):
+        """获取绑定的二维码"""
+
+        return Response(data=create_qrcode(request.user.username), status=status.HTTP_200_OK)
+
+    def get_queryset(self, user=None):
+        queryset = SignRecord.objects.all().filter(user_id=user)
+        return queryset
+
+    def get_object(self):
+        return self.request.user
+
+    def perform_create(self, serializer):
+        return serializer.save()
+
+
+class SmsCodeViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    """发送手机短信验证码"""
+
+    serializer_class = SmsSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        mobile = serializer.validated_data['mobile']
+        if authcode(mobile):
+            return Response(data={'msg': '验证码请求成功'}, status=status.HTTP_200_OK)
         else:
-            data['status'] = 'ERROR'
-        return JsonResponse(data)
-    context = {}
-    context['is_login'] = True if request.user.is_authenticated else False
-    return render(request, 'login.html', context)
+            return Response(data={'msg': '验证码请求失败'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-def center(request):
-    """用户中心"""
-    user = request.user
-    if user.is_authenticated:
-        context = {}
+class SignRecordViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    """签到记录"""
 
-        ten_day_timestamp = 864000
-        expire_time = user.last_login.timestamp() + ten_day_timestamp
-        differ = expire_time - time.time()
-        percent = '%.2f%%' % ((differ / ten_day_timestamp) * 100)
-        context['expire_time'] = time.strftime("%Y-%m-%d %H:%M", time.localtime(expire_time))
-        context['percent'] = percent
+    # 序列化类
+    serializer_class = SignRecordSerializer
+    # 过滤器
+    filter_backends = [filters.DjangoFilterBackend]
+    filterset_class = SignRecordFilter
+    # 查询集
+    queryset = SignRecord.objects.all()
+    # 权限认证
+    authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
 
-        now = datetime.datetime.now()
-        zeroToday = now - datetime.timedelta(hours=now.hour, minutes=now.minute, seconds=now.second,
-                                             microseconds=now.microsecond)
-        # 获取23:59:59
-        lastToday = zeroToday + datetime.timedelta(hours=23, minutes=59, seconds=59)
-        context['records'] = SignRecord.objects.filter(user=user)[:5]
-        context['is_sign_today'] = SignRecord.objects.filter(sign_time__range=(zeroToday, lastToday)).exists()
-        return render(request, 'center.html', context)
-    else:
-        return redirect(reverse('login'))
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True, data=request.user)
+        return Response(serializer.data)
 
 
-def send_code_by_tel(request):
-    """请求手机验证码"""
-    tel = request.GET.get('tel')
-    data = {}
-    if authcode(tel):
-        data['status'] = 'SUCCESS'
-        data['msg'] = '验证码发送成功，请注意查收'
-    else:
-        data['status'] = 'ERROR'
-        data['msg'] = '验证码请求失败，请重新获取'
-    return JsonResponse(data)
+class BindWxPushViewSet(viewsets.GenericViewSet, mixins.UpdateModelMixin):
+    """根据用户输入的key绑定推送"""
+
+    serializer_class = WxPushSerializer
+    authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
+
+    def get_object(self):
+        return self.request.user
+
+
+# class WxPushQrcode(APIView):
+#
+#     def get(self, request, format=None):
+#         serializer = request.user

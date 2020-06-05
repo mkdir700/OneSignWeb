@@ -2,8 +2,13 @@ import json
 from user.models import User
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.authentication import SessionAuthentication
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
+from rest_framework import viewsets
+from rest_framework import mixins
+from user.models import User
 from .utils import create_qrcode, send_message
-
+from .serializers import WxPushSerializer
 
 @csrf_exempt
 def pushCallBack(request):
@@ -27,7 +32,11 @@ def pushCallBack(request):
 
 
 def get_qrcode_for_user(request):
+    """为当前用户创建绑定的二维码"""
     user = request.user
     if user.is_authenticated:
         resp = create_qrcode(user.username)
         return JsonResponse(resp)
+
+
+

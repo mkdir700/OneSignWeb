@@ -23,8 +23,8 @@ class User(AbstractUser):
     def __str__(self):
         return self.tel
 
-    @staticmethod
-    def check_verify_code(username, password):
+    # @staticmethod
+    def check_verify_code(self, username, password):
         return cloud_run(username, password)
 
     def cookie_is_valid(self) -> bool:
