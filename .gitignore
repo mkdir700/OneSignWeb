@@ -155,3 +155,5 @@ db_tools
 将删除 user/migrations/0001_initial.py
 将删除 user/migrations/0002_auto_20200509_1614.py
 将删除 user/migrations/0003_auto_20200509_1615.py
+
+user/config.py
