@@ -52,6 +52,9 @@ class SignRecord(models.Model):
     sign_active = models.BooleanField(default=True, verbose_name="打卡状态")
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    def username(self):
+        return '{}({})'.format(self.user.last_name if self.user.last_name else '??? ', self.user.username)
+
     class Meta:
         verbose_name = '签到记录'
         verbose_name_plural = verbose_name
