@@ -131,7 +131,7 @@ class HeathSign(object):
         # 获取上次上报信息以及用户唯一标识符
         self.user_id = data["data"]["data"]["_id"]
         self.latestReport = data["data"]["data"]["latestReport"]
-        # address = data["data"]["data"]["address"]
+        address = data["data"]["data"]["address"]
         # todo 部分用户取不到lastHealthReport
         try:
             lastHealthReport = data["data"]["data"]["lastHealthReport"]
@@ -144,8 +144,8 @@ class HeathSign(object):
                 'infected': False,
                 'contacted': False,
                 'fever': False}
-        # address.pop("detail")
-        # address.pop("_id")
+        address.pop("detail")
+        address.pop("_id")
         fields = [
             "isInitCreate",
             "remoteHealthLevel",
@@ -165,9 +165,9 @@ class HeathSign(object):
         lastHealthReport["description"] = ""
         lastHealthReport["at_home"] = True
         # 数据整理
-        # self.last_report_msg = {"address": address}
-        # self.last_report_msg.update(lastHealthReport)
-        self.last_report_msg = lastHealthReport
+        self.last_report_msg = {"address": address}
+        self.last_report_msg.update(lastHealthReport)
+        # self.last_report_msg = lastHealthReport
 
     def __daily_reports(self):
         """每日信息上报"""
