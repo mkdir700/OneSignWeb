@@ -13,7 +13,7 @@ scheduler = BackgroundScheduler()
 scheduler.add_jobstore(DjangoJobStore(), 'default')
 
 
-# @register_job(scheduler, 'interval', id='autosign', seconds=10)
+# @register_job(scheduler, 'interval', id='自动打卡', seconds=10)
 @register_job(scheduler, 'cron', id='自动打卡', hour=0, minute=2)
 def autosign():
     # 具体要执行的代码
@@ -23,7 +23,7 @@ def autosign():
     close_old_connections()
 
 
-# @register_job(scheduler, 'interval', id='remind_cookie', seconds=30)
+# @register_job(scheduler, 'interval', id='cookie失效提醒', seconds=10)
 @register_job(scheduler, 'cron', id='cookie失效提醒', hour=6, minute=0)
 def remind_cookie():
     close_old_connections()
