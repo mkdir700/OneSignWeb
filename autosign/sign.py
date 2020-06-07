@@ -3,8 +3,7 @@ import json
 import requests
 import base64
 
-
-COOKIES_PATH = ''
+HOST = "https://www.ioteams.com"
 
 
 def encrypt_tel(tel):
@@ -18,7 +17,7 @@ def encrypt_tel(tel):
 
 def get_code(tel) -> bool:
     """请求获取验证码"""
-    auth_url = 'https://www.ioteams.com/ncov/api/users/authcode'
+    auth_url = HOST+'/ncov/api/users/authcode'
     base64_tel = encrypt_tel(tel)
     payload = 'tel=' + base64_tel
     headers = {
@@ -41,17 +40,19 @@ class HeathSign(object):
     def __init__(self):
         self.headers = {
             'Accept': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 '
-            'Safari/537.36',
+                      'Safari/537.36',
             'Content-Type': 'application/json;charset=UTF-8',
             'Host': 'www.ioteams.com',
             'Referer': 'https://www.ioteams.com/ncov/'}
         self.session = requests.session()
+        self.user_id = ""
+        self.after_login_info = {}
 
-    def tel_login(self, tel, authcode) -> bool:
+    def login_by_mobile(self, tel, authcode) -> bool:
         """手机登录"""
         # 加密方式：base64加密，“=” 替换为 1，再进行反转
         base64_tel = encrypt_tel(tel)
-        login_api = 'https://www.ioteams.com/ncov/api/users/general/login'
+        login_api = HOST + '/ncov/api/users/general/login'
         headers = {
             'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -62,36 +63,38 @@ class HeathSign(object):
         if response.status_code != 200:
             print("登录失败")
             return False
-        res = json.loads(response.text)
+        # 保存请求登录后 拿到的信息
+        self.after_login_info = json.loads(response.text)
+        return self.set_headers()
 
-        # 通过登录获取到company，以及ncov-access-token
-        if res["code"] == 0:
-            ncov_access_token = res['data']['meta']['access-token']
-            company = res['data']['data']['users'][0]['companyCode']
+    def set_headers(self):
+        # 获取company及ncov-access-token, 并设置请求头
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+        if self.after_login_info["code"] == 0:
+            ncov_access_token = self.after_login_info['data']['meta']['access-token']
+            company = self.after_login_info['data']['data']['users'][0]['companyCode']
             headers["ncov-access-token"] = ncov_access_token
             payload = "company={}&type={}".format(company, "h5")
-            response = self.session.request(
+            self.session.request(
                 "POST",
-                "https://www.ioteams.com/ncov/api/users/companies/switch",
+                HOST + "/ncov/api/users/companies/switch",
                 headers=headers,
                 data=payload)
-        else:
-            return False
-        return True
+            return True
+        return False
 
-    def cookie_login(self, cookies):
+    def login_by_cookies(self, cookies):
         """通过cookie登录"""
         self.set_cookies(cookies)
         r = self.session.get(
-            'https://www.ioteams.com/ncov/api/sys/user/info',
+            HOST + '/ncov/api/sys/user/info',
             headers=self.headers)
-        if r.status_code == 200:
-            return True
-        else:
-            return False
+        return True if r.status_code == 200 else False
 
-    def __save_cookies(self):
-        """保存cookies"""
+    def _new_cookies(self) -> json:
+        """处理本次登录的cookie并返回"""
         cookies = self.session.cookies.get_dict()
         cookies["ncov-access-token-health-user"] = cookies["ncov-access-token-h5"]
         self.headers["ncov-access-token"] = cookies["ncov-access-token-h5"]
@@ -102,134 +105,88 @@ class HeathSign(object):
 
     def set_cookies(self, cookies):
         """设置cookies"""
-        # cookies有效期10天
         cookies = json.loads(cookies)
         self.headers["ncov-access-token"] = cookies["ncov-access-token-h5"]
         self.session.cookies = requests.utils.cookiejar_from_dict(cookies)
 
-    def check_cookies(self, cookies):
-        """检测cookies是否存在且是否有效"""
-        # 设置cookies
-        self.set_cookies(cookies)
-        r = self.session.get(
-            'https://www.ioteams.com/ncov/api/sys/user/info',
-            headers=self.headers)
-        if r.status_code == 200:
-            # 失效cookies
-            return True
-        else:
-            return False
+    def get_last_report(self):
+        """获取上次上报的信息"""
+        lastHealthReport = {}
+        r = self.session.get(HOST + '/ncov/api/users/last-report', headers=self.headers)
+        data = json.loads(r.text)
+        print(data)
+        self.user_id = data['data']['data']['user']
+        address = data['data']['data']['address']
+        address.pop('_id')
+        print(address)
 
-    def get_user_info(self):
-        """获取用户个人信息"""
-        url = 'https://www.ioteams.com/ncov/api/users/healthDetail'
-        r = self.session.get(url, headers=self.headers)
-        return json.loads(r.text)
+        # TODO 测试不修改这些字段，直接带着请求是否可行
 
-    def get_last_report(self, data):
-        """获取上次报告数据"""
-        # 获取上次上报信息以及用户唯一标识符
-        self.user_id = data["data"]["data"]["_id"]
-        self.latestReport = data["data"]["data"]["latestReport"]
-        address = data["data"]["data"]["address"]
-        # todo 部分用户取不到lastHealthReport
-        try:
-            lastHealthReport = data["data"]["data"]["lastHealthReport"]
-        except:
-            lastHealthReport = {
-                'self_confirmed': False,
-                'self_suspected': False,
-                'family_suspected': False,
-                'family_confirmed': False,
-                'infected': False,
-                'contacted': False,
-                'fever': False}
-        address.pop("detail")
-        address.pop("_id")
-        fields = [
-            "isInitCreate",
-            "remoteHealthLevel",
-            "_id",
-            "temperature",
-            "company",
-            "user",
-            "created_at",
-            "updated_at",
-            "__v",
-            "current_fever"]
-        for field in fields:
-            try:
-                lastHealthReport.pop(field)
-            except BaseException:
-                continue
-        lastHealthReport["description"] = ""
-        lastHealthReport["at_home"] = True
-        # 数据整理
-        self.last_report_msg = {"address": address}
-        self.last_report_msg.update(lastHealthReport)
-        # self.last_report_msg = lastHealthReport
+        lastHealthReport['self_confirmed'] = False
+        lastHealthReport['self_suspected'] = False
+        lastHealthReport['family_suspected'] = False
+        lastHealthReport['family_confirmed'] = False
+        lastHealthReport['infected'] = False
+        lastHealthReport['contacted'] = False
+        lastHealthReport['fever'] = False
+        lastHealthReport['description'] = False
+        lastHealthReport['at_home'] = False
+        lastHealthReport.update(address)
+        return lastHealthReport
 
-    def __daily_reports(self):
+    def _daily_reports(self) -> bool:
         """每日信息上报"""
-        url = 'https://www.ioteams.com/ncov/api/users/dailyReport'
+        last_report = self.get_last_report()
+        url = HOST + '/ncov/api/users/dailyReport'
         r = self.session.post(
             url, headers=self.headers, data=json.dumps(
-                self.last_report_msg))
+                last_report))
         r = json.loads(r.text)
+
+        # TODO 检查请求成功后响应信息
+
+        print(r, '1111111111')
         if r['msg'] == 'success':
             print('上报信息成功!')
-            return {'msg': True, 'detail': '今日信息上报成功'}
+            return True
         else:
             print(r['msg'])
-            return {'msg': False, 'detail': r['msg']}
+            return False
 
-    def __health_report(self):
+    def _health_report(self) -> bool:
         """健康码打卡"""
         data = {
             'current_fever': False,
             'temperature': 36.5
         }
-        url = 'https://www.ioteams.com/ncov/api/users/{}/health-report'.format(
+        url = HOST + '/ncov/api/users/{}/health-report'.format(
             self.user_id)
         r = requests.patch(url, headers=self.headers, data=json.dumps(data))
-        if r.status_code == 204:
-            print("打卡成功")
-            return {'msg': True, 'detail': '健康码打卡成功'}
-        else:
-            print("打卡失败")
-            return {'msg': False, 'detail': '健康码打卡失败'}
-
-    def __server_send(self, dict):
-        """server酱将消息推送至微信"""
-        params = {
-            'text': '健康码每日自动打卡消息！',
-            'desp': dict['detail']
-        }
-
-        requests.get('', params=params)
+        print("健康码打卡成功")
+        return True if r.status_code == 204 else False
 
     def run(self) -> dict:
-        cookies = self.__save_cookies()
-        user_info = self.get_user_info()
-        self.get_last_report(user_info)
-
-        h1 = self.__daily_reports()
-        h2 = self.__health_report()
-
-        msg = {
+        new_cookies = self._new_cookies()
+        h1 = self._daily_reports()
+        h2 = self._health_report()
+        detail = ""
+        if h1 and h2:
+            detail = "今日健康信息【ok】\n健康码打卡【ok】"
+        elif h2:
+            detail = "健康码打卡成功"
+        return {
             'code': 100,
             'status': True,
-            'detail': h1['detail'] + '\r\r' + h2['detail'],
-            'cookies': cookies,
-            'info': user_info
+            'detail': detail,
+            'cookies': new_cookies,
+            'info': self.after_login_info
         }
-        return msg
 
 
 def local_run(cookie) -> dict:
     """本地挂机运行"""
     s = HeathSign()
-    if not s.cookie_login(cookie):
+    if not s.login_by_cookies(cookie):
         return {'status': False, 'msg': "cookie已失效"}
     data = s.run()
     return data
@@ -238,6 +195,6 @@ def local_run(cookie) -> dict:
 def cloud_run(tel, code) -> dict:
     """提供给前端手动签到"""
     s = HeathSign()
-    if not s.tel_login(tel, code):
+    if not s.login_by_mobile(tel, code):
         return {'status': False, 'msg': "登录失败"}
     return s.run()

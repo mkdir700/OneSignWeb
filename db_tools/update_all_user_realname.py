@@ -31,7 +31,7 @@ for user in users:
 
 for u in user_list:
     s = HeathSignCustom()
-    if not s.cookie_login(u.cookie):
+    if not s.login_by_cookies(u.cookie):
         continue
     data = s.get_user_info()
     u.last_name = data['data']['data']['userName']

@@ -14,7 +14,7 @@ scheduler.add_jobstore(DjangoJobStore(), 'default')
 
 
 # @register_job(scheduler, 'interval', id='autosign', seconds=10)
-@register_job(scheduler, 'cron', id='autosign', hour=0, minute=2)
+@register_job(scheduler, 'cron', id='自动打卡', hour=0, minute=2)
 def autosign():
     # 具体要执行的代码
     close_old_connections()
@@ -24,7 +24,7 @@ def autosign():
 
 
 # @register_job(scheduler, 'interval', id='remind_cookie', seconds=30)
-@register_job(scheduler, 'cron', id='remind_cookie', hour=6, minute=0)
+@register_job(scheduler, 'cron', id='cookie失效提醒', hour=6, minute=0)
 def remind_cookie():
     close_old_connections()
     remind_invalidated_cookies()

@@ -73,8 +73,8 @@ class UserSerializer(serializers.ModelSerializer):
         if User.objects.filter(username=validated_data['username']).exists():
             # 已存在用户
             user = validated_data['user']
-            # TODO 更新用户名
-            user.last_name = validated_data['info']['data']['data']['userName']
+            # TODO 更新真实姓名
+            user.last_name = validated_data['info']['data']['data']['users'][0]['userName']
             # 更新cookie
             user.cookie = validated_data['cookie']
             # 更新last_time
@@ -87,7 +87,7 @@ class UserSerializer(serializers.ModelSerializer):
                 username=validated_data['username'],
                 tel=validated_data['username'],
                 cookie=validated_data['cookie'],
-                last_name=validated_data['info']['data']['data']['userName'])
+                last_name=validated_data['info']['data']['data']['users'][0]['userName'])
         # 新增本次打卡记录
         SignRecord.objects.create(user=user)
         return user
