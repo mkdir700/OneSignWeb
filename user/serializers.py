@@ -75,11 +75,8 @@ class UserSerializer(serializers.ModelSerializer):
             user = validated_data['user']
             # TODO 更新真实姓名
             user.last_name = validated_data['info']['data']['data']['users'][0]['userName']
-            # 更新cookie
             user.cookie = validated_data['cookie']
-            # 更新last_time
             user.last_login = timezone.now()
-            user.save()
             user.update_cookie_expire_time()
         else:
             # 不存在，创建用户
