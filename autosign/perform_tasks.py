@@ -1,5 +1,6 @@
 import datetime
 from django.db import close_old_connections
+from django.db.models import Q
 from autosign.sign import local_run
 from user.models import SignRecord, User
 from user.utils import send_message
@@ -11,6 +12,7 @@ def handle_db_connections(func):
         result = func()
         close_old_connections()
         return result
+
     return func_wrapper
 
 
@@ -18,7 +20,7 @@ def handle_db_connections(func):
 def perform_sign_task():
     """开始签到任务"""
     # 取出所有开启自动打卡的用户
-    users = User.objects.filter(is_auto_sign=True)
+    users = User.objects.filter(Q(is_auto_sign=True) & Q(is_superuser=False))
     for user in users:
         # user = User.objects.get(id=task.user_id)
         res = local_run(user.cookie)
@@ -42,7 +44,7 @@ def remind_invalidated_cookies():
     """推送消息给cookie即将失效的用户"""
     now = datetime.datetime.now()
     # 明天的0点时间
-    zero_tomorrow = now + datetime.timedelta(days=1, hours=-now.hour, minutes=-now.minute+2, seconds=-now.second,
+    zero_tomorrow = now + datetime.timedelta(days=1, hours=-now.hour, minutes=-now.minute + 2, seconds=-now.second,
                                              microseconds=-now.microsecond)
     user_list = User.objects.filter(cookie_expired_time__lt=zero_tomorrow)
     for user in user_list:
