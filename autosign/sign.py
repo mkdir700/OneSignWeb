@@ -118,7 +118,7 @@ class HeathSign(object):
         self.user_id = data['data']['data']['user']
         address = data['data']['data']['address']
         address.pop('_id')
-        address.pop('province')
+        # address.pop('province')
         print(address)
 
         # TODO 测试不修改这些字段，直接带着请求是否可行
@@ -130,9 +130,9 @@ class HeathSign(object):
         lastHealthReport['infected'] = False
         lastHealthReport['contacted'] = False
         lastHealthReport['fever'] = False
-        lastHealthReport['description'] = False
-        lastHealthReport['at_home'] = False
-        lastHealthReport.update(address)
+        lastHealthReport['description'] = ""
+        lastHealthReport['at_home'] = True
+        lastHealthReport.update({'address': address})
         return lastHealthReport
 
     def _daily_reports(self) -> bool:
