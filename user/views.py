@@ -167,8 +167,9 @@ class WxPushCallBackView(APIView):
         data = json.loads(request.body)
 
         # 获取回调密钥，防止恶意利用
-        extra = data.get('data').get('extra', '')
-        key, username = extra.split('/') if '/' in extra else ('', '')
+        # print(data)
+        extra = data['data']['extra']
+        key, username = extra.replace("\"", "").split('/') if '/' in extra else ('', '')
         if key != callback_key:
             return Response({'error': '此接口不对外开放'})
 
