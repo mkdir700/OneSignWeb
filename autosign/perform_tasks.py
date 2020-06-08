@@ -1,9 +1,8 @@
 import datetime
 from django.db import close_old_connections
 from autosign.sign import local_run
-from user.models import SignRecord
+from user.models import SignRecord, User
 from user.utils import send_message
-from .models import SignTasks, User
 
 
 def handle_db_connections(func):
@@ -18,9 +17,10 @@ def handle_db_connections(func):
 @handle_db_connections
 def perform_sign_task():
     """开始签到任务"""
-    tasks = SignTasks.objects.filter(is_active=True)
-    for task in tasks:
-        user = User.objects.get(id=task.user_id)
+    # 取出所有开启自动打卡的用户
+    users = User.objects.filter(is_auto_sign=True)
+    for user in users:
+        # user = User.objects.get(id=task.user_id)
         res = local_run(user.cookie)
         # 记录签到日志
         if res['status']:
