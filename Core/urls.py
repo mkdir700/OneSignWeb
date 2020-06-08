@@ -21,11 +21,17 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from rest_framework.documentation import include_docs_urls
 from django.contrib import staticfiles
 
+
+def trigger_error(request):
+    division_by_zero = 1 / 0
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('user.urls')),
     path('api/', include('autosign.urls')),
     path('docs/', include_docs_urls(title="健康码打卡API文档")),
+    path('sentry_debug/', trigger_error)
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 urlpatterns += staticfiles_urlpatterns()

@@ -54,7 +54,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware', # 解决跨域问题的中间件
+    'corsheaders.middleware.CorsMiddleware',  # 解决跨域问题的中间件
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -170,7 +170,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 SESSION_COOKIE_AGE = 60 * 60 * 24 * 8  # 30分钟
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-
 
 # BROKER_URL = 'redis://127.0.0.1:6379/'
 # CELERY_IMPORTS = ('app.tasks')
