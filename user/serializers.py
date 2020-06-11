@@ -165,7 +165,7 @@ class UserDetailSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_last_login(obj):
-        return datetime.datetime.timestamp(obj.last_login)
+        return datetime.datetime.timestamp(obj.date_joined if obj.date_joined else obj.last_login)
 
 
 class WxPushSerializer(serializers.Serializer):
