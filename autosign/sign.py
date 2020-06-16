@@ -132,6 +132,9 @@ class HeathSign(object):
         lastHealthReport['fever'] = False
         lastHealthReport['description'] = ""
         lastHealthReport['at_home'] = True
+        lastHealthReport['contacted_beijing'] = False
+        lastHealthReport['passed_beijing'] = False
+        # 'contacted_beijing': False, 'passed_beijing': False
         lastHealthReport.update({'address': address})
         return lastHealthReport
 
@@ -170,11 +173,11 @@ class HeathSign(object):
         new_cookies = self._new_cookies()
         h1 = self._daily_reports()
         h2 = self._health_report()
-        detail = ""
-        if h1 and h2:
-            detail = "今日健康信息【ok】\n健康码打卡【ok】"
-        elif h2:
-            detail = "健康码打卡成功"
+        tmp = {
+            True: '成功',
+            False: '失败'
+        }
+        detail = "健康信息上报【{}】\r\n健康码打卡【{}】".format(tmp[h1], tmp[h2])
         return {
             'code': 100,
             'status': True,
