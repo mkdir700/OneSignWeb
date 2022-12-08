@@ -5,7 +5,7 @@ asgiref==3.2.7
 billiard==3.3.0.23
 celery==3.1.26.post2
 celery-with-redis==3.0
-certifi==2020.4.5.1
+certifi==2022.12.7
 chardet==3.0.4
 Django==3.0.7
 django-timezone-field==4.0
